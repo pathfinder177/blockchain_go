@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blockchain/common"
 	"bytes"
 	"crypto/sha256"
 	"fmt"
@@ -30,9 +31,9 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 		[][]byte{
 			pow.block.PrevBlockHash,
 			pow.block.HashTransactions(),
-			IntToHex(pow.block.Timestamp),
-			IntToHex(int64(targetBits)),
-			IntToHex(int64(nonce)),
+			common.IntToHex(pow.block.Timestamp),
+			common.IntToHex(int64(targetBits)),
+			common.IntToHex(int64(nonce)),
 		},
 		[]byte{},
 	)

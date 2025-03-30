@@ -1,0 +1,1 @@
+Added simple hardcoded tests for https://github.com/Jeiwan/blockchain_go/tree/master project

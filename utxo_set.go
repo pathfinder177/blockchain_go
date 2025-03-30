@@ -102,7 +102,7 @@ func (u UTXOSet) Reindex() {
 
 	err := db.Update(func(tx *bolt.Tx) error {
 		err := tx.DeleteBucket(bucketName)
-		if err != nil && err != bolt.ErrBucketNotFound {
+		if err != nil && err != bolt.ErrBucketNotFound { //FIXME
 			log.Panic(err)
 		}
 

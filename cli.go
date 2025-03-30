@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blockchain/common"
 	"flag"
 	"fmt"
 	"log"
@@ -42,7 +43,7 @@ func (cli *CLI) getBalance(address, nodeID string) {
 	defer bc.db.Close()
 
 	balance := 0
-	pubKeyHash := Base58Decode([]byte(address))
+	pubKeyHash := common.Base58Decode([]byte(address))
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-4]
 	UTXOs := UTXOSet.FindUTXO(pubKeyHash)
 

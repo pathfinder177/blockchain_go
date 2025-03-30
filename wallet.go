@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blockchain/common"
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -10,7 +11,7 @@ import (
 	"log"
 	"math/big"
 
-	"golang.org/x/crypto/ripemd160"
+	"golang.org/x/crypto/ripemd160" //FIXME
 )
 
 const version = byte(0x00)
@@ -38,7 +39,7 @@ func (w Wallet) GetAddress() []byte {
 	checksum := checksum(versionedPayload)
 
 	fullPayload := append(versionedPayload, checksum...)
-	address := Base58Encode(fullPayload)
+	address := common.Base58Encode(fullPayload)
 
 	return address
 }
@@ -67,7 +68,7 @@ func checksum(payload []byte) []byte {
 
 // ValidateAddress check if address is valid
 func ValidateAddress(address string) bool {
-	pubKeyHash := Base58Decode([]byte(address))
+	pubKeyHash := common.Base58Decode([]byte(address))
 	actualChecksum := pubKeyHash[len(pubKeyHash)-addressChecksumLen:]
 	version := pubKeyHash[0]
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-addressChecksumLen]
