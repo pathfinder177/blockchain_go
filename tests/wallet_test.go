@@ -3,8 +3,6 @@ package tests
 import (
 	"blockchain/internal/app"
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"math/big"
 	"reflect"
 	"testing"
 )
@@ -36,52 +34,12 @@ func TestWallet_GetAddress(t *testing.T) {
 	}{
 		{
 			name: "cmp",
-			want: "17v3P2zeB49coGX2Sz6byFptKJRaDVzC6Y",
+			want: test_wallet_address,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			x := new(big.Int).SetBits([]big.Word{
-				18302347381835011368,
-				10824219518206851950,
-				14543274358396171484,
-				15200568927396967186,
-			})
-
-			// Construct Y using the provided words.
-			y := new(big.Int).SetBits([]big.Word{
-				2320667325194657460,
-				12320845091154170490,
-				1777185806402393421,
-				12513258465373944226,
-			})
-
-			// Construct D using the provided words.
-			d := new(big.Int).SetBits([]big.Word{
-				14601373157214410493,
-				721469850043518372,
-				18338694530410490814,
-				12521284765453296601,
-			})
-
-			// Create the private key for testing.
-			privateKey := &ecdsa.PrivateKey{
-				PublicKey: ecdsa.PublicKey{
-					Curve: elliptic.P256(),
-					X:     x,
-					Y:     y,
-				},
-				D: d,
-			}
-
-			pubKey := append(privateKey.PublicKey.X.Bytes(), privateKey.PublicKey.Y.Bytes()...)
-
-			w := app.Wallet{
-				PrivateKey: *privateKey,
-				PublicKey:  pubKey,
-			}
-
-			if got := string(w.GetAddress()); !reflect.DeepEqual(got, tt.want) {
+			if got := string(test_wallet.GetAddress()); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Wallet.GetAddress() = %v, want %v", got, tt.want)
 			}
 		})
