@@ -1,6 +1,7 @@
-package main
+package tests
 
 import (
+	"blockchain/internal/app"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"math/big"
@@ -9,7 +10,7 @@ import (
 )
 
 func TestNewWalletFieldTypes(t *testing.T) {
-	walletType := reflect.TypeOf(Wallet{})
+	walletType := reflect.TypeOf(app.Wallet{})
 
 	expectedFields := map[string]reflect.Type{
 		"PrivateKey": reflect.TypeOf(ecdsa.PrivateKey{}),
@@ -75,7 +76,7 @@ func TestWallet_GetAddress(t *testing.T) {
 
 			pubKey := append(privateKey.PublicKey.X.Bytes(), privateKey.PublicKey.Y.Bytes()...)
 
-			w := Wallet{
+			w := app.Wallet{
 				PrivateKey: *privateKey,
 				PublicKey:  pubKey,
 			}

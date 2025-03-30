@@ -1,6 +1,7 @@
-package main
+package tests
 
 import (
+	"blockchain/internal/app"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"math/big"
@@ -54,13 +55,13 @@ func TestWallets_GetAddresses(t *testing.T) {
 			}
 
 			w_address := "17v3P2zeB49coGX2Sz6byFptKJRaDVzC6Y"
-			w := &Wallet{
+			w := &app.Wallet{
 				PrivateKey: *privateKey,
 				PublicKey:  append(privateKey.PublicKey.X.Bytes(), privateKey.PublicKey.Y.Bytes()...),
 			}
 
-			ws := Wallets{}
-			ws.Wallets = make(map[string]*Wallet)
+			ws := app.Wallets{}
+			ws.Wallets = make(map[string]*app.Wallet)
 			ws.Wallets[w_address] = w
 
 			if got := ws.GetAddresses(); !reflect.DeepEqual(got, tt.want) {
@@ -104,19 +105,19 @@ func TestWallets_GetWallet(t *testing.T) {
 		D: d,
 	}
 
-	w := &Wallet{
+	w := &app.Wallet{
 		PrivateKey: *privateKey,
 		PublicKey:  append(privateKey.PublicKey.X.Bytes(), privateKey.PublicKey.Y.Bytes()...),
 	}
 	w_address := string("17v3P2zeB49coGX2Sz6byFptKJRaDVzC6Y")
 
-	ws := Wallets{}
-	ws.Wallets = make(map[string]*Wallet)
+	ws := app.Wallets{}
+	ws.Wallets = make(map[string]*app.Wallet)
 	ws.Wallets[w_address] = w
 
 	tests := []struct {
 		name string
-		want Wallet
+		want app.Wallet
 	}{
 		{
 			name: "cmp",

@@ -1,6 +1,7 @@
-package main
+package tests
 
 import (
+	"blockchain/internal/app"
 	"reflect"
 	"testing"
 )
@@ -13,7 +14,7 @@ func TestNewTXOutput(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *TXOutput
+		want *app.TXOutput
 	}{
 		{
 			name: "constructor",
@@ -21,7 +22,7 @@ func TestNewTXOutput(t *testing.T) {
 				value:   5,
 				address: "1AYmpvb95P8m7je8SZzTnLx7Z6sjRr6PK",
 			},
-			want: &TXOutput{
+			want: &app.TXOutput{
 				Value: 5,
 				PubKeyHash: []byte{
 					0x01, 0xCE, 0x44, 0x2C, 0xDE, 0x67, 0xDA, 0x83,
@@ -32,7 +33,7 @@ func TestNewTXOutput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewTXOutput(tt.args.value, tt.args.address); !reflect.DeepEqual(got, tt.want) {
+			if got := app.NewTXOutput(tt.args.value, tt.args.address); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewTXOutput() = %v, want %v", got, tt.want)
 			}
 		})
