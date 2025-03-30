@@ -41,3 +41,5 @@ var test_wallet app.Wallet = app.Wallet{
 	PrivateKey: *test_privateKey,
 	PublicKey:  append(test_privateKey.PublicKey.X.Bytes(), test_privateKey.PublicKey.Y.Bytes()...),
 }
+
+var test_wallets = app.Wallets{Wallets: make(map[string]*app.Wallet)}
