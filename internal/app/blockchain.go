@@ -33,7 +33,9 @@ func CreateBlockchain(address string, nodeID string) *Blockchain {
 
 	var tip []byte
 
+	//return coinbase TXs
 	cbtx := NewCoinbaseTX(address, genesisCoinbaseData)
+	//include coinbase TXs
 	genesis := NewGenesisBlock(cbtx)
 
 	db, err := bolt.Open(dbFile, 0600, nil)
@@ -228,7 +230,7 @@ func (bc *Blockchain) FindUTXO() map[string]TXOutputs {
 
 		Outputs:
 			for outIdx, out := range tx.Vout {
-				// Was the output spent?
+				// Was the output of currency spent?
 				if spentTXOs[txID] != nil {
 					for _, spentOutIdx := range spentTXOs[txID] {
 						if spentOutIdx == outIdx {
@@ -236,7 +238,6 @@ func (bc *Blockchain) FindUTXO() map[string]TXOutputs {
 						}
 					}
 				}
-
 				outs := UTXO[txID]
 				outs.Outputs = append(outs.Outputs, out)
 				UTXO[txID] = outs

@@ -21,6 +21,7 @@ func (cli *CLI) createBlockchain(address, nodeID string) {
 	defer bc.db.Close()
 
 	UTXOSet := UTXOSet{bc}
+	//reindex all if no args or specific bucket
 	UTXOSet.Reindex()
 
 	fmt.Println("Done!")
@@ -111,6 +112,7 @@ func (cli *CLI) send(from, to string, amount int, nodeID string, mineNow bool) {
 	}
 
 	bc := NewBlockchain(nodeID)
+	//probably different UTXOsets
 	UTXOSet := UTXOSet{bc}
 	defer bc.db.Close()
 
@@ -120,6 +122,7 @@ func (cli *CLI) send(from, to string, amount int, nodeID string, mineNow bool) {
 	}
 	wallet := wallets.GetWallet(from)
 
+	//different transactions depends on currency
 	tx := NewUTXOTransaction(&wallet, to, amount, &UTXOSet)
 
 	if mineNow {
@@ -129,6 +132,7 @@ func (cli *CLI) send(from, to string, amount int, nodeID string, mineNow bool) {
 		newBlock := bc.MineBlock(txs)
 		UTXOSet.Update(newBlock)
 	} else {
+		//TODO: send TXs
 		sendTx(knownNodes[0], tx)
 	}
 

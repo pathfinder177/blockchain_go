@@ -100,6 +100,7 @@ func (u UTXOSet) Reindex() {
 	db := u.Blockchain.db
 	bucketName := []byte(utxoBucket)
 
+	//Reindex depends on args: 0 all, 1 specific bucket
 	err := db.Update(func(tx *bolt.Tx) error {
 		err := tx.DeleteBucket(bucketName)
 		if err != nil && err != bolt.ErrBucketNotFound { //FIXME
@@ -117,8 +118,10 @@ func (u UTXOSet) Reindex() {
 		log.Panic(err)
 	}
 
+	//Get UTXOs for all currencies or currency
 	UTXO := u.Blockchain.FindUTXO()
 
+	//Update DB for currencies or currency
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
 
