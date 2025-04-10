@@ -144,7 +144,6 @@ func (cli *CLI) send(from, to, currency string, amount int, nodeID string, mineN
 		newBlock := bc.MineBlock(txs)
 		UTXOSet.Update(newBlock)
 	} else {
-		//send TXs
 		sendTx(knownNodes[0], tx)
 	}
 
