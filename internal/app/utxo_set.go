@@ -3,15 +3,21 @@ package app
 import (
 	"encoding/hex"
 	"log"
+	"strings"
 
 	bolt "go.etcd.io/bbolt"
 )
 
-const utxoBucket = "chainstate"
+const (
+	utxoBucketBadger  = "badgercoin_chainstate"
+	utxoBucketCatfish = "catfishcoin_chainstate"
+	utxoBucket        = "chainstate" //FIXME
+)
 
 // UTXOSet represents UTXO set
 type UTXOSet struct {
 	Blockchain *Blockchain
+	Bucket     string
 }
 
 // FindSpendableOutputs finds and returns unspent outputs to reference in inputs
@@ -49,6 +55,7 @@ func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[s
 func (u UTXOSet) FindUTXO(pubKeyHash []byte) []TXOutput {
 	var UTXOs []TXOutput
 	db := u.Blockchain.db
+	utxoBucket := u.Bucket
 
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(utxoBucket))
@@ -98,7 +105,7 @@ func (u UTXOSet) CountTransactions() int {
 // Reindex rebuilds the UTXO set
 func (u UTXOSet) Reindex() {
 	db := u.Blockchain.db
-	bucketName := []byte(utxoBucket)
+	bucketName := []byte(u.Bucket)
 
 	err := db.Update(func(tx *bolt.Tx) error {
 		err := tx.DeleteBucket(bucketName)
@@ -117,8 +124,10 @@ func (u UTXOSet) Reindex() {
 		log.Panic(err)
 	}
 
-	UTXO := u.Blockchain.FindUTXO()
+	currency, _ := strings.CutSuffix(u.Bucket, "_chainstate")
+	UTXO := u.Blockchain.FindUTXO(currency)
 
+	//Update DB for currencies or currency
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
 

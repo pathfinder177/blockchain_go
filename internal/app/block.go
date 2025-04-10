@@ -38,8 +38,8 @@ func (b *Block) HashTransactions() []byte {
 	return mTree.RootNode.Data
 }
 
-func NewGenesisBlock(coinbase *Transaction) *Block {
-	return NewBlock([]*Transaction{coinbase}, []byte{}, 0)
+func NewGenesisBlock(coinbase []*Transaction) *Block {
+	return NewBlock(coinbase, []byte{}, 0)
 }
 
 func (b *Block) Serialize() []byte {
