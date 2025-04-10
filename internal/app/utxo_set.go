@@ -13,6 +13,8 @@ const (
 	utxoBucketCatfish = "catfishcoin_chainstate"
 )
 
+var utxoBuckets = [...]string{utxoBucketBadger, utxoBucketCatfish}
+
 // UTXOSet represents UTXO set
 type UTXOSet struct {
 	Blockchain *Blockchain
