@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/hex"
 	"log"
+	"strings"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -16,6 +17,7 @@ const (
 // UTXOSet represents UTXO set
 type UTXOSet struct {
 	Blockchain *Blockchain
+	Bucket     string
 }
 
 // FindSpendableOutputs finds and returns unspent outputs to reference in inputs
@@ -102,9 +104,8 @@ func (u UTXOSet) CountTransactions() int {
 // Reindex rebuilds the UTXO set
 func (u UTXOSet) Reindex() {
 	db := u.Blockchain.db
-	bucketName := []byte(utxoBucket)
+	bucketName := []byte(u.Bucket)
 
-	//Reindex depends on args: 0 all, 1 specific bucket
 	err := db.Update(func(tx *bolt.Tx) error {
 		err := tx.DeleteBucket(bucketName)
 		if err != nil && err != bolt.ErrBucketNotFound { //FIXME
@@ -122,8 +123,8 @@ func (u UTXOSet) Reindex() {
 		log.Panic(err)
 	}
 
-	//Get UTXOs for all currencies or currency
-	UTXO := u.Blockchain.FindUTXO()
+	currency, _ := strings.CutSuffix(u.Bucket, "_chainstate")
+	UTXO := u.Blockchain.FindUTXO(currency)
 
 	//Update DB for currencies or currency
 	err = db.Update(func(tx *bolt.Tx) error {
