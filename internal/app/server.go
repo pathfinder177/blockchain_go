@@ -333,7 +333,7 @@ func handleTx(request []byte, bc *Blockchain) {
 				return
 			}
 
-			cbTx := NewCoinbaseTX(miningAddress, "")
+			cbTx := NewCoinbaseTX(miningAddress, "FIXME", "")
 			txs = append(txs, cbTx)
 
 			newBlock := bc.MineBlock(txs)

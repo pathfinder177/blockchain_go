@@ -7,7 +7,11 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-const utxoBucket = "chainstate"
+const (
+	utxoBucketBadger  = "badgercoin_chainstate"
+	utxoBucketCatfish = "catfishcoin_chainstate"
+	utxoBucket        = "chainstate" //FIXME
+)
 
 // UTXOSet represents UTXO set
 type UTXOSet struct {

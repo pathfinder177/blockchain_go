@@ -52,20 +52,12 @@ Converting a single to a multi-currency blockchain/ledger requires:
 
     Generalized notion of Value
     allows the atomic transfer of multiple assets and currencies 
-    in a single account-based transaction
-- Token issuance
-    - *(Optionally) add creator of the currency to specify monetary policy
-        - Add new TX type
-        - Make supply fixed
-
-- Modular architecture
-    *(Optionally) implements separate blockchain for each currency(sidechains)
+    in a single UTXO-based transaction
 
 - Consensus and Validation
     Adjustments to the consensus mechanism may be necessary if the introduction of multiple currencies impacts transaction throughput or security assumptions. In some designs, you might separate the validation of different asset types or incorporate additional verification steps for token-specific transactions.
 
 - Multi-Currency Wallet Integration
-
 
 #### Multi-token ledger design
 Ledger logic are contains in files:
@@ -75,64 +67,57 @@ block*, utxo_set
 Transaction logic contains in files:
 block*, transaction*, utxo_set
 
-#### How TX is processed now(without server part)
+#### How TX is processed now(without running node so far)
 There are two types of TX:
 1. Coinbase TX is used when:
     genesis block is created(the only TX there)
     new block is created and coinbase TX is the first in this block.
 2. UTXO TX is used when:
-    Roughly owner of one wallet transfers coins to other wallet
+    Roughly: owner of one wallet transfers coins to other wallet
     Technically, coins should be unlocked using current owner data and locked using next owner data
 
 ## Projecting
-### Bring multicurrency to the blockchain
+### Bring multicurrency to the blockchain: no running nodes
+##### Break down at TX level:
+
+TX has new field: currency
+
+Write TX with the currency to the corresponding UTXO bucket
+    Genesis block includes 2 TXs
+    Other block includes from 2 to 4 TXs:
+        One for coinbase and one for currency
+        Miner get reward in currency of user's TX
+
 Handles two types of transactions:
 ##### 1. Coinbase
 Given blockchain is created
 When genesis block is mined
 Then miner get subsidy in two currencies
 
-Test: as blockchain is created there is correct subsidy got to miner
-Check: createBlockchain, newBlockchain, createWallet, getBalance
+Test: as blockchain is created there is correct subsidy given to miner
+Check: createBlockchain, newBlockchain, createWallet, getBalance, printchain
 
-REINDEX -> FindUTXO
-Something to differ currencies to work with
-Should 2 currencies be in one TX?
-    Probably not(except for coinbase)
-
-Iterate over values as REINDEX need it
-1) Iterate over currencies in method
-2) Method take currency as input to not to iterate over all
-3) Can method finds UTXOs for all currencies?
-4) If UTXO has mixed structure?
-5) Reindex by bucket
-
-Break down currencies into buckets only for UTXO?
-
-State: two buckets in DB:
-badgercoin_chainstate and catfish_chainstate
-
-##### Break down at TX level:
-
-Write each type of TXs to corr.buckets
-    Genesis block includes 2 TXs
-    Other block includes from 2 to 4 TXs:
-        One for coinbase and one for currency
-
-##### Break down at BLC level
+State: 
+1) two UTXO buckets in DB: badgercoin_chainstate and catfishcoin_chainstate
+2) 2 UTXOSets is in use
 
 ##### 2. UTXO
-Given UTXO TX is started
-When amount is calculated
+Given UTXO TX is started and TX has new field: currency
 Then different currencies are handled correctly
 
-Put to different buckets should be shaped as transactions
-FindSpendableOutputs: what is sent and what do we search for
+Check: send, getbalance, printchain
 
-Cases:
-    SEND: one currency has x UTXO number and other has y UTXO number and txID
+##### Wallets
+Given any type of TX occurs
+Then participating wallets have correct balance of each currency
 
-#### Questions:
+Check: getBalance
+
+### Bring multicurrency to the blockchain: with running nodes
+
+Check: startNode and scenario from https://jeiwan.net/posts/building-blockchain-in-go-part-7/
+
+#### Q&A:
     Currency:
     - What will the blockchain address look like?
         Won't be changed

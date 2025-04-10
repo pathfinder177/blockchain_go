@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -33,10 +34,14 @@ func CreateBlockchain(address string, nodeID string) *Blockchain {
 
 	var tip []byte
 
-	//return coinbase TXs
-	cbtx := NewCoinbaseTX(address, genesisCoinbaseData)
-	//include coinbase TXs
-	genesis := NewGenesisBlock(cbtx)
+	utxoBuckets := []string{utxoBucketBadger, utxoBucketCatfish}
+	cbTXs := []*Transaction{}
+	for _, uB := range utxoBuckets {
+		currency, _ := strings.CutSuffix(uB, "_chainstate")
+		cbTXs = append(cbTXs, NewCoinbaseTX(address, currency, genesisCoinbaseData))
+	}
+
+	genesis := NewGenesisBlock(cbTXs)
 
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
