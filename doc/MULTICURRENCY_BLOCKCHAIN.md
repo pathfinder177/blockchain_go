@@ -98,8 +98,7 @@ Test: as blockchain is created there is correct subsidy given to miner
 Check: createBlockchain, newBlockchain, createWallet, getBalance, printchain
 
 State: 
-1) two UTXO buckets in DB: badgercoin_chainstate and catfishcoin_chainstate
-2) 2 UTXOSets is in use
+- two UTXO buckets in DB: badgercoin_chainstate and catfishcoin_chainstate
 
 ##### 2. UTXO
 Given UTXO TX is started and TX has new field: currency

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // CLI responsible for processing command line arguments
@@ -43,20 +44,23 @@ func (cli *CLI) getBalance(address, nodeID string) {
 	}
 	bc := NewBlockchain(nodeID)
 	defer bc.db.Close()
-	//get balance of all currencies by default
-	UTXOSet := UTXOSet{bc, "FIXME"}
 
-	balance := 0
 	pubKeyHash := common.Base58Decode([]byte(address))
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-4]
-	//Find UTXOs for all currencies
-	UTXOs := UTXOSet.FindUTXO(pubKeyHash)
 
-	for _, out := range UTXOs {
-		balance += out.Value
+	utxoBuckets := []string{utxoBucketBadger, utxoBucketCatfish}
+	for _, uB := range utxoBuckets {
+		UTXOSet := UTXOSet{bc, uB}
+		UTXOs := UTXOSet.FindUTXO(pubKeyHash)
+
+		balance := 0
+		for _, out := range UTXOs {
+			balance += out.Value
+		}
+
+		currency, _ := strings.CutSuffix(uB, "_chainstate")
+		fmt.Printf("Balance of '%s': '%s': %d\n", address, currency, balance)
 	}
-
-	fmt.Printf("Balance of '%s': %d\n", address, balance)
 }
 
 func (cli *CLI) printUsage() {
