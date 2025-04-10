@@ -77,6 +77,17 @@ func ValidateAddress(address string) bool {
 	return bytes.Equal(actualChecksum, targetChecksum)
 }
 
+func ValidateCurrencyName(currency string) bool {
+	switch currency {
+	case "badgercoin":
+		return true
+	case "catfishcoin":
+		return true
+	default:
+		return false
+	}
+}
+
 func newKeyPair() (ecdsa.PrivateKey, []byte) {
 	curve := elliptic.P256()
 	private, err := ecdsa.GenerateKey(curve, rand.Reader)

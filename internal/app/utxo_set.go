@@ -11,7 +11,6 @@ import (
 const (
 	utxoBucketBadger  = "badgercoin_chainstate"
 	utxoBucketCatfish = "catfishcoin_chainstate"
-	utxoBucket        = "chainstate" //FIXME
 )
 
 // UTXOSet represents UTXO set
@@ -25,6 +24,7 @@ func (u UTXOSet) FindSpendableOutputs(pubkeyHash []byte, amount int) (int, map[s
 	unspentOutputs := make(map[string][]int)
 	accumulated := 0
 	db := u.Blockchain.db
+	utxoBucket := u.Bucket
 
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(utxoBucket))
@@ -156,6 +156,7 @@ func (u UTXOSet) Reindex() {
 // The Block is considered to be the tip of a blockchain
 func (u UTXOSet) Update(block *Block) {
 	db := u.Blockchain.db
+	utxoBucket := u.Bucket
 
 	err := db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(utxoBucket))
