@@ -83,6 +83,7 @@ func (u UTXOSet) FindUTXO(pubKeyHash []byte) []TXOutput {
 // CountTransactions returns the number of transactions in the UTXO set
 func (u UTXOSet) CountTransactions() int {
 	db := u.Blockchain.db
+	utxoBucket := u.Bucket
 	counter := 0
 
 	err := db.View(func(tx *bolt.Tx) error {
