@@ -19,9 +19,10 @@ const subsidy = 10
 
 // Transaction represents a Bitcoin transaction
 type Transaction struct {
-	ID   []byte
-	Vin  []TXInput
-	Vout []TXOutput
+	ID       []byte
+	Vin      []TXInput
+	Vout     []TXOutput
+	Currency string
 }
 
 // IsCoinbase checks whether the transaction is coinbase
@@ -125,7 +126,7 @@ func (tx *Transaction) TrimmedCopy() Transaction {
 		outputs = append(outputs, TXOutput{vout.Value, vout.PubKeyHash})
 	}
 
-	txCopy := Transaction{tx.ID, inputs, outputs}
+	txCopy := Transaction{tx.ID, inputs, outputs, tx.Currency}
 
 	return txCopy
 }
@@ -176,7 +177,7 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 }
 
 // NewCoinbaseTX creates a new coinbase transaction
-func NewCoinbaseTX(to, data string) *Transaction {
+func NewCoinbaseTX(to, currency, data string) *Transaction {
 	if data == "" {
 		randData := make([]byte, 20)
 		_, err := rand.Read(randData)
@@ -189,14 +190,14 @@ func NewCoinbaseTX(to, data string) *Transaction {
 
 	txin := TXInput{[]byte{}, -1, nil, []byte(data)}
 	txout := NewTXOutput(subsidy, to)
-	tx := Transaction{nil, []TXInput{txin}, []TXOutput{*txout}}
+	tx := Transaction{nil, []TXInput{txin}, []TXOutput{*txout}, currency}
 	tx.ID = tx.Hash()
 
 	return &tx
 }
 
 // NewUTXOTransaction creates a new transaction
-func NewUTXOTransaction(wallet *Wallet, to string, amount int, UTXOSet *UTXOSet) *Transaction {
+func NewUTXOTransaction(wallet *Wallet, to, currency string, amount int, UTXOSet *UTXOSet) *Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
 
@@ -207,7 +208,6 @@ func NewUTXOTransaction(wallet *Wallet, to string, amount int, UTXOSet *UTXOSet)
 		log.Panic("ERROR: Not enough funds")
 	}
 
-	// Build a list of inputs
 	for txid, outs := range validOutputs {
 		txID, err := hex.DecodeString(txid)
 		if err != nil {
@@ -220,14 +220,13 @@ func NewUTXOTransaction(wallet *Wallet, to string, amount int, UTXOSet *UTXOSet)
 		}
 	}
 
-	// Build a list of outputs
 	from := string(wallet.GetAddress())
 	outputs = append(outputs, *NewTXOutput(amount, to))
 	if acc > amount {
 		outputs = append(outputs, *NewTXOutput(acc-amount, from)) // a change
 	}
 
-	tx := Transaction{nil, inputs, outputs}
+	tx := Transaction{nil, inputs, outputs, currency}
 	tx.ID = tx.Hash()
 	UTXOSet.Blockchain.SignTransaction(&tx, wallet.PrivateKey)
 
