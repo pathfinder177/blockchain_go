@@ -209,8 +209,12 @@ func handleBlock(request []byte, bc *Blockchain) {
 
 		blocksInTransit = blocksInTransit[1:]
 	} else {
-		UTXOSet := UTXOSet{bc, "FIXME"}
-		UTXOSet.Reindex()
+		currencies := getCurrenciesNamesFromBlock(block)
+		for curr := range currencies {
+			bucketname := curr + "_chainstate"
+			UTXOSet := UTXOSet{bc, bucketname}
+			UTXOSet.Reindex()
+		}
 	}
 }
 
@@ -333,11 +337,13 @@ func handleTx(request []byte, bc *Blockchain) {
 				return
 			}
 
-			cbTx := NewCoinbaseTX(miningAddress, "FIXME", "")
+			currency := tx.Currency
+			cbTx := NewCoinbaseTX(miningAddress, currency, "")
 			txs = append(txs, cbTx)
 
 			newBlock := bc.MineBlock(txs)
-			UTXOSet := UTXOSet{bc, "FIXME"}
+			bucketName := currency + "_chainstate"
+			UTXOSet := UTXOSet{bc, bucketName}
 			UTXOSet.Reindex()
 
 			fmt.Println("New block is mined!")
