@@ -24,7 +24,8 @@ A wallet client application that works with two cryptocurrencies' coins (referre
 5. **Receive Coins**
 6. **Get Data**
    - Balance for currencies
-   - Transaction history for each currency over a specific period.  
+   - Transaction history for each currency over a specific period.
+7. ?Wallet smart contract?
 
 ---
 
@@ -85,7 +86,7 @@ Wallet client uses wallet server only to connect to blockchain
 
 Wallet server is a middleware to handle and proceed with requests from wallet client
 Wallet server use blc features to do it and interact with blockchain over wallet node only
-* Interaction between wallet server and blc uses command in blc cli(kind of simplification)
+* Interaction between wallet server and blc uses command of blc cli(kind of simplification)
 
 Wallet server: nodeID 3003
 Wallet client: nodeID 3004
@@ -103,14 +104,13 @@ Some handlers use storages:
     - DB for database of users(postgresql)
     - BLC for blockchain
 
-- Also good idea to partially cache user data for GET requests to not to overload blockchain
+- A good idea to cache user data for GET requests to not to overload blockchain
     and append/change data after send/receive actions in cache as any tx is immutable.
     - Here I omit it
 
 /
 /auth(DB)
 /send(bc)
-/get_balance(for two currencies)(bc)
 /get_history(all txs history for the wallet for period(7d default))(bc)
 /get_history_for_currency(bc)(txs history for the currency for period(7d default))(bc)
 /delete_wallet(DB and blc)
@@ -129,13 +129,12 @@ Some handlers use storages:
         - delete wallet
 
 ## Projecting
-1. All connections are handled in apart goroutine
+1. All connections are handled in apart goroutine(both)
+2. Graceful shutdown(both)
+3. Rate limiting(client)
 
 Approach 1: create all web part then integrate it with blockchain
-Approach 2: create from inside to outside so start with backend
-
-Place wallet app files in respective directories
-built and run binary file will use wallet and blockchain files in cmd dir
+Approach 2: create from inside to outside: start with backend
 
 ### Handlers
 
@@ -149,16 +148,15 @@ App -> asks for wallet address
 User -> POST(submit wallet address)
 App -> check wallet address for validity and existence
     if exists: get data from blockchain, fill static page with data, redirects to main page. url=/walletaddress
-    else -> 4** error(wrap getBalance error)
+    else -> 4** error
 Mock buttons for now
-Do story without ui, use console
 
-Use getBalance from blc
+Use getBalance from blc cli
+TODO: make blc cli as functions and cli package is imported(use cobra etc)
 To send request to blc, use wallet server that handles requests
 
 #### /auth(DB)
 #### /send(bc)
-#### /get_balance(for two currencies)(bc)
 #### /get_history(all txs history for the wallet for period(7d default))(bc)
 #### /get_history_for_currency(bc)(txs history for the currency for period(7d default))(bc)
 #### /delete_wallet(DB and blc)

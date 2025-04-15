@@ -1,25 +1,49 @@
 package main
 
 import (
-	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"text/template"
 )
 
-var tmpl = template.Must(template.New("form").Parse(`
+var index_tmpl_get = template.Must(template.New("form").Parse(`
 <!DOCTYPE html>
 <html>
-<head><title>Input Form</title></head>
+<head>
+    <title>Input Form</title>
+</head>
 <body>
     <h1>Enter your wallet address</h1>
     <form action="/" method="POST">
         <input type="text" name="walletAddress" required>
         <input type="submit" value="Submit">
     </form>
-    {{if .}}
-        <p>Your wallet address and balance is {{.}}</p> //FIXME
+</body>
+</html>
+`))
+
+var index_tmpl_post = template.Must(template.New("form").Parse(`
+<!DOCTYPE html>
+<html>
+<head><title>Welcome</title></head>
+<body>
+    <h1>Your wallet address is {{.WAddress}}</h1>
+	<hr>
+
+    <h2>Balance</h2>
+    {{range .WBalance}}
+        <p>{{.}}</p>
     {{end}}
+	<hr>
+
+    <h2>Actions</h2>
+    <form>
+        <button type="button">Send Currency</button><br />
+        <button type="button">Get Transactions History</button><br />
+        <button type="button">Get Currency Transactions History</button><br />
+        <button type="button">Delete Wallet</button><br />
+    </form>
 </body>
 </html>
 `))
@@ -33,31 +57,50 @@ func index(w http.ResponseWriter, r *http.Request) {
 		address := r.FormValue("walletAddress")
 		wb, err := getWalletBalance(address)
 		if err != nil {
-			log.Panic(err)
+			http.Error(w, "Wallet address is not correct", http.StatusBadRequest)
+			return
 		}
-		tmpl.Execute(w, address+wb) //FIXME
+
+		index_tmpl_post.Execute(w, struct {
+			WAddress string
+			WBalance []string
+		}{address, wb})
 		return
 	}
 
-	tmpl.Execute(w, nil)
+	index_tmpl_get.Execute(w, nil)
 }
 
-func getWalletBalance(address string) (string, error) {
+func getWalletBalance(address string) ([]string, error) {
 	args := []string{"getbalance", "-address", address}
 	cmd := exec.Command("./blockchain", args...)
 
-	output, err := cmd.CombinedOutput() // gets both stdout and stderr
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", err
+		return []string{}, err
 	}
 
-	return string(output), nil
+	strSliceOutput := []string{}
+	lastPos := 0
+	for i := range output {
+		if output[i] == '\n' {
+			s := string(output[lastPos : i+1])
+			strSliceOutput = append(strSliceOutput, s)
+			lastPos = i + 1
+		}
+	}
+
+	return strSliceOutput, nil
 }
 
 func main() {
+	os.Setenv("NODE_ID", "3001") //FIXME use it only on server side
+	// getWalletBalance("14tmM4cbsoMqJvMv2dixauXFxKRaKnibad")
+
 	http.HandleFunc("/", index)
 
 	http.ListenAndServe(":3003", nil)
+
 }
 
 // package main
