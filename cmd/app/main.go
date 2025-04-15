@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
@@ -38,9 +39,11 @@ var index_tmpl_post = template.Must(template.New("form").Parse(`
 	<hr>
 
     <h2>Actions</h2>
+	<form action="/transactions" method="GET">
+        <button type="submit">Get Transactions History</button><br />
+    </form>
     <form>
         <button type="button">Send Currency</button><br />
-        <button type="button">Get Transactions History</button><br />
         <button type="button">Get Currency Transactions History</button><br />
         <button type="button">Delete Wallet</button><br />
     </form>
@@ -93,11 +96,29 @@ func getWalletBalance(address string) ([]string, error) {
 	return strSliceOutput, nil
 }
 
+func transactionsHistory(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet && r.URL.Path == "/transactions" {
+		fmt.Fprintf(w, "%s\n", "transactions history!")
+	}
+}
+
+// func getTransactionsHistory(address string) ([]string, error) {
+//search block by block in blockchain
+//get send transactions: concurrent?
+//get receive transactions: concurrent?
+
+//format transactions as
+//Timestamp Send/Receive Currency Amount Sender Receiver
+
+// render template
+// }
+
 func main() {
 	os.Setenv("NODE_ID", "3001") //FIXME use it only on server side
 	// getWalletBalance("14tmM4cbsoMqJvMv2dixauXFxKRaKnibad")
 
 	http.HandleFunc("/", index)
+	http.HandleFunc("/transactions", transactionsHistory)
 
 	http.ListenAndServe(":3003", nil)
 

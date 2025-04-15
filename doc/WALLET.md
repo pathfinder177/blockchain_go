@@ -111,8 +111,8 @@ Some handlers use storages:
 /
 /auth(DB)
 /send(bc)
-/get_history(all txs history for the wallet for period(7d default))(bc)
-/get_history_for_currency(bc)(txs history for the currency for period(7d default))(bc)
+/transactions(all txs history for the wallet for period(7d default))(bc)
+/currency_transactions(bc)(txs history for the currency for period(7d default))(bc)
 /delete_wallet(DB and blc)
 
 ### Wallet UI
@@ -155,10 +155,27 @@ Use getBalance from blc cli
 TODO: make blc cli as functions and cli package is imported(use cobra etc)
 To send request to blc, use wallet server that handles requests
 
+#### /get_history(all txs history for the wallet for period(7d default))(bc)
+Given user click get_history
+When user submit time period
+Then user is redirected to page with wallet transactions history
+
+User -> GET / and button Get Transactions History
+*App -> asks for period
+*User -> POST(submit period)
+App -> search block by block from the last where (*timestamp if period submitted*):
+    (SEND)tx input: wallet address and output: other address
+    (RECEIVE)tx input: other address and output: wallet address
+    
+    for coinbase tx check only output
+    represents for user as:
+    
+    Timestamp Send/Receive Currency Amount Sender Receiver
+App -> redirects user to /transactions
+
+#### /get_history_for_currency(bc)(txs history for the currency for period(7d default))(bc)
 #### /auth(DB)
 #### /send(bc)
-#### /get_history(all txs history for the wallet for period(7d default))(bc)
-#### /get_history_for_currency(bc)(txs history for the currency for period(7d default))(bc)
 #### /delete_wallet(DB and blc)
 
 ## Q&A
