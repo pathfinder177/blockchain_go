@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"os/exec"
 	"text/template"
 )
@@ -97,30 +96,20 @@ func getWalletBalance(address string) ([]string, error) {
 }
 
 func transactionsHistory(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet && r.URL.Path == "/transactions" {
-		fmt.Fprintf(w, "%s\n", "transactions history!")
-	}
+	fmt.Fprintf(w, "%s\n", "transactions history!")
+	//getTH
 }
 
-// func getTransactionsHistory(address string) ([]string, error) {
-//search block by block in blockchain
-//get send transactions: concurrent?
-//get receive transactions: concurrent?
-
-//format transactions as
-//Timestamp Send/Receive Currency Amount Sender Receiver
-
-// render template
-// }
-
 func main() {
-	os.Setenv("NODE_ID", "3001") //FIXME use it only on server side
-	// getWalletBalance("14tmM4cbsoMqJvMv2dixauXFxKRaKnibad")
+	// os.Setenv("NODE_ID", "3003") //FIXME use it only on server side
+	startWalletServer()
+	// getTransactionsHistory("14tmM4cbsoMqJvMv2dixauXFxKRaKnibad")
 
-	http.HandleFunc("/", index)
-	http.HandleFunc("/transactions", transactionsHistory)
+	//wallet client side
+	// http.HandleFunc("/", index)
+	// http.HandleFunc("/transactions", transactionsHistory)
 
-	http.ListenAndServe(":3003", nil)
+	// http.ListenAndServe(":3003", nil)
 
 }
 

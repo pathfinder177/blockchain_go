@@ -85,8 +85,8 @@ Wallet as client-side application implemented as web-server serves static conten
 Wallet client uses wallet server only to connect to blockchain
 
 Wallet server is a middleware to handle and proceed with requests from wallet client
-Wallet server use blc features to do it and interact with blockchain over wallet node only
-* Interaction between wallet server and blc uses command of blc cli(kind of simplification)
+Wallet server interacts with blockchain over blockchain cli and wallet_node
+- A good idea is to interact with blockchain through wallet node only to not to overload blockchain
 
 Wallet server: nodeID 3003
 Wallet client: nodeID 3004
@@ -97,14 +97,20 @@ Wallet client: nodeID 3004
 - Backend to use blockchain functionality
 
 ### Storage
-To implements basic auth: use postgresql with hashed login and passwords
+To implements basic auth: use postgresql as database of users
+#### Schema
+Users table:
+username password
+
+Wallet table:
+username wallet
 
 ### Handlers:
 Some handlers use storages:
-    - DB for database of users(postgresql)
+    - DB for database of users
     - BLC for blockchain
 
-- A good idea to cache user data for GET requests to not to overload blockchain
+- A good idea is to cache user data for GET requests to not to overload blockchain
     and append/change data after send/receive actions in cache as any tx is immutable.
     - Here I omit it
 
@@ -131,7 +137,8 @@ Some handlers use storages:
 ## Projecting
 1. All connections are handled in apart goroutine(both)
 2. Graceful shutdown(both)
-3. Rate limiting(client)
+*3. Rate limiting(client)
+*4. Advanced routing(Gorilla mux)
 
 Approach 1: create all web part then integrate it with blockchain
 Approach 2: create from inside to outside: start with backend
@@ -169,19 +176,46 @@ App -> search block by block from the last where (*timestamp if period submitted
     
     for coinbase tx check only output
     represents for user as:
-    
     Timestamp Send/Receive Currency Amount Sender Receiver
-App -> redirects user to /transactions
+
+App -> render template and redirects user to /transactions
 
 #### /get_history_for_currency(bc)(txs history for the currency for period(7d default))(bc)
-#### /auth(DB)
-#### /send(bc)
+Given user click get_history for currency
+When user submit time period and currency
+Then user is redirected to page with transactions history for currency
+
+Currency should be chosen by user: radiobutton(hardcoded)
+
+#### /auth(DB) change index page to "main page" is required
+NEW USER
+Given user get to /
+When user clicks sign up
+Then user is redirected to page with registration form, submit data and redirected to main page
+On main page user submits wallet address and it refers to user and can not be reused anyone else
+
+EXISTING USER
+Given user get to /
+When user click sign in
+Then user submit the login data and redirected to main page
+
+#### /send(blc)
+Given user click send
+When user submit amount, currency, receiver
+Then currency is sent and confirmation is shown(e.g. you sent 10 badgercoin to address)
+
 #### /delete_wallet(DB and blc)
+Given user click delete wallet
+When user confirm
+Then user is deleted from user's database and tokens from wallet are burned and wallet is deleted from wallet file
+
+### Clean up the code
+### Format the code
 
 ## Q&A
 - Should wallet be in blockchain repo(monorepo approach)? yes
     - Pros: 
         - simple to test, all code in one place
     - Cons: 
-        - no concerns separations(this degree is ok for pet project)
-        - if not then need to put wallet code in this repo as only web part need to be done
+        - no concerns separations(ok for pet project)
+        - if not then import wallet code in this repo(so wallet should be a package) as only web part need to be done
