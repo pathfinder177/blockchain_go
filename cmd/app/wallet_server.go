@@ -67,6 +67,15 @@ type inv struct {
 	Items    [][]byte
 }
 
+type BlockTxsHistory struct {
+	Timestamp int64
+	Type      string
+	Currency  string
+	Amount    int
+	Sender    string
+	Receiver  string
+}
+
 func commandToBytes(command string) []byte {
 	var bytes [commandLength]byte
 
@@ -131,16 +140,18 @@ func sendGetData(address, kind string, id []byte) {
 	sendData(address, request)
 }
 
-func getTxHistory(b Block) {
+func getBlockTxsHistory(b Block) ([]BlockTxsHistory, error) {
 	address := "15bcaRcuuxToXfPthPRVsXJhHHC42LLNuF" //FIXME; address has 2 badgercoin
 	args := []string{"getwalletpubkeyhash", "-address", address}
 	cmd := exec.Command("./blockchain", args...)
 
 	pubKeyHash, err := cmd.CombinedOutput()
 	if err != nil {
-		return //FIXME
+		return []BlockTxsHistory{}, err
 	}
 	sPubKeyHash := string(pubKeyHash)
+
+	BTH := []BlockTxsHistory{}
 
 	for _, tx := range b.Transactions {
 		for _, vin := range tx.Vin {
@@ -155,13 +166,12 @@ func getTxHistory(b Block) {
 				fmt.Println("Equal!")
 			}
 		}
-		//address in VIN: put to send TXs
-		//address in VOUT and not in VIN: put to receive TXs
 		//coinbase has no input
 	}
+	return BTH, nil
 }
 
-func handleBlock(request []byte) {
+func handleBlock(request []byte, chFilledBlockTxsHistory chan<- []BlockTxsHistory, chDone chan<- bool) {
 	var buff bytes.Buffer
 	var payload block
 
@@ -174,13 +184,20 @@ func handleBlock(request []byte) {
 
 	blockData := payload.Block
 	block := DeserializeBlock(blockData)
-	getTxHistory(*block)
+
+	bth, err := getBlockTxsHistory(*block)
+	if err != nil {
+		log.Panic(err)
+	}
+	chFilledBlockTxsHistory <- bth
 
 	if len(blocksInTransit) > 0 {
 		blockHash := blocksInTransit[0]
 		sendGetData(payload.AddrFrom, "block", blockHash)
 
 		blocksInTransit = blocksInTransit[1:]
+	} else {
+		chDone <- true
 	}
 }
 
@@ -225,7 +242,18 @@ func handleInv(request []byte) {
 	}
 }
 
-func handleConnection(conn net.Conn) {
+func sendBlockTxsHistory(chFilledBlockTxsHistory <-chan []BlockTxsHistory, chDone <-chan bool) []BlockTxsHistory {
+	BTH := make([]BlockTxsHistory, 32) //FIXME
+	select {
+	case tmp := <-chFilledBlockTxsHistory:
+		BTH = append(BTH, tmp...)
+	case <-chDone:
+		//sort by timestamp
+		return BTH
+	}
+}
+
+func handleConnection(conn net.Conn, chFilledBlockTxsHistory chan []BlockTxsHistory, chDone chan bool) {
 	request, err := io.ReadAll(conn)
 	if err != nil {
 		log.Panic(err)
@@ -235,7 +263,7 @@ func handleConnection(conn net.Conn) {
 
 	switch command {
 	case "block":
-		handleBlock(request)
+		handleBlock(request, chFilledBlockTxsHistory, chDone)
 	case "inv":
 		handleInv(request)
 	}
@@ -248,7 +276,11 @@ func startWalletServer() {
 	}
 	defer ln.Close()
 
-	getBlocks()
+	getBlocks() //FIXME: put in handle connection and call instead of inv if "transactionsHistory"
+
+	chFilledBlockTxsHistory := make(chan []BlockTxsHistory)
+	chDone := make(chan bool)
+	go sendBlockTxsHistory(chFilledBlockTxsHistory, chDone)
 
 	for {
 		conn, err := ln.Accept()
@@ -257,6 +289,6 @@ func startWalletServer() {
 		}
 		//not in goroutine as TX should be in order
 		//OR get blocks with goroutines and sort it by timestamp
-		handleConnection(conn)
+		handleConnection(conn, chFilledBlockTxsHistory, chDone)
 	}
 }
