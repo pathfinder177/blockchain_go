@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os/exec"
 )
 
 // FIXME
@@ -90,7 +91,7 @@ func bytesToCommand(bytes []byte) string {
 
 // end FIXME
 
-func getTransactionsHistory() {
+func getBlocks() {
 	payload := gobEncode(getblocks{nodeAddress})
 	request := append(commandToBytes("getblocks"), payload...)
 
@@ -130,6 +131,36 @@ func sendGetData(address, kind string, id []byte) {
 	sendData(address, request)
 }
 
+func getTxHistory(b Block) {
+	address := "15bcaRcuuxToXfPthPRVsXJhHHC42LLNuF" //FIXME; address has 2 badgercoin
+	args := []string{"getwalletpubkeyhash", "-address", address}
+	cmd := exec.Command("./blockchain", args...)
+
+	pubKeyHash, err := cmd.CombinedOutput()
+	if err != nil {
+		return //FIXME
+	}
+	sPubKeyHash := string(pubKeyHash)
+
+	for _, tx := range b.Transactions {
+		for _, vin := range tx.Vin {
+			sVinPK := string(vin.PubKey)
+			if sVinPK == sPubKeyHash {
+				fmt.Println("Equal!")
+			}
+		}
+		for _, vout := range tx.Vout { //FIXME
+			sVoutPK := string(vout.PubKeyHash)
+			if sVoutPK == sPubKeyHash {
+				fmt.Println("Equal!")
+			}
+		}
+		//address in VIN: put to send TXs
+		//address in VOUT and not in VIN: put to receive TXs
+		//coinbase has no input
+	}
+}
+
 func handleBlock(request []byte) {
 	var buff bytes.Buffer
 	var payload block
@@ -143,13 +174,14 @@ func handleBlock(request []byte) {
 
 	blockData := payload.Block
 	block := DeserializeBlock(blockData)
-	//start work with a block
-	fmt.Println("Recevied a new block!", block.Transactions)
+	getTxHistory(*block)
 
-	blockHash := blocksInTransit[0]
-	sendGetData(payload.AddrFrom, "block", blockHash)
+	if len(blocksInTransit) > 0 {
+		blockHash := blocksInTransit[0]
+		sendGetData(payload.AddrFrom, "block", blockHash)
 
-	blocksInTransit = blocksInTransit[1:]
+		blocksInTransit = blocksInTransit[1:]
+	}
 }
 
 func DeserializeBlock(d []byte) *Block {
@@ -216,13 +248,15 @@ func startWalletServer() {
 	}
 	defer ln.Close()
 
-	getTransactionsHistory()
+	getBlocks()
 
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			log.Panic(err)
 		}
-		go handleConnection(conn)
+		//not in goroutine as TX should be in order
+		//OR get blocks with goroutines and sort it by timestamp
+		handleConnection(conn)
 	}
 }

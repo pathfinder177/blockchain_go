@@ -37,6 +37,20 @@ func (cli *CLI) createWallet(nodeID string) {
 	fmt.Printf("Your new address: %s\n", address)
 }
 
+func (cli *CLI) getWalletPubKeyHash(address, nodeID string) {
+	if !ValidateAddress(address) {
+		log.Panic("ERROR: walletAddress is not valid")
+	}
+	wallets, err := NewWallets(nodeID)
+	if err != nil {
+		log.Panic(err)
+	}
+	wallet := wallets.GetWallet(address)
+	pubKeyHash := HashPubKey(wallet.PublicKey)
+
+	fmt.Printf("%s", pubKeyHash)
+}
+
 func (cli *CLI) getBalance(address, nodeID string) {
 	if !ValidateAddress(address) {
 		log.Panic("ERROR: Address is not valid")
@@ -64,6 +78,7 @@ func (cli *CLI) getBalance(address, nodeID string) {
 func (cli *CLI) printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
+	fmt.Println("  getwalletpubkeyhash -address ADDRESS - Get PubKeyHash of ADDRESS")
 	fmt.Println("  createblockchain -address ADDRESS - Create a blockchain and send genesis block reward to ADDRESS")
 	fmt.Println("  printchain - Print all the blocks of the blockchain")
 	fmt.Println("  reindexutxo - Rebuilds the UTXO set")
@@ -173,6 +188,7 @@ func (cli *CLI) Run() {
 	}
 
 	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
+	getWalletPubKeyHashCmd := flag.NewFlagSet("getwalletpubkeyhash", flag.ExitOnError)
 	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
@@ -181,6 +197,7 @@ func (cli *CLI) Run() {
 	startNodeCmd := flag.NewFlagSet("startnode", flag.ExitOnError)
 
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
+	getWalletPKHash := getWalletPubKeyHashCmd.String("address", "", "The address to get PubKeyHash for")
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
 	sendFrom := sendCmd.String("from", "", "Source wallet address")
 	sendTo := sendCmd.String("to", "", "Destination wallet address")
@@ -192,6 +209,11 @@ func (cli *CLI) Run() {
 	switch os.Args[1] {
 	case "getbalance":
 		err := getBalanceCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Panic(err)
+		}
+	case "getwalletpubkeyhash":
+		err := getWalletPubKeyHashCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -236,6 +258,14 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 		cli.getBalance(*getBalanceAddress, nodeID)
+	}
+
+	if getWalletPubKeyHashCmd.Parsed() {
+		if *getWalletPKHash == "" {
+			getWalletPubKeyHashCmd.Usage()
+			os.Exit(1)
+		}
+		cli.getWalletPubKeyHash(*getWalletPKHash, nodeID)
 	}
 
 	if createBlockchainCmd.Parsed() {
