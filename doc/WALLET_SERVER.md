@@ -1,19 +1,16 @@
-# Wallet Client App
-A wallet client application that works with two cryptocurrencies' coins (referred to as "currencies") and uses [blockchain](https://github.com/pathfinder177/blockchain_go) as the server side
+# Wallet Server
+A wallet client-server application that works with two cryptocurrencies' coins (referred to as "currencies") and uses [blockchain](https://github.com/pathfinder177/blockchain_go) as the server side.
+
+For a client side please refer to [crypto_wallet](https://github.com/pathfinder177/crypto_wallet)
 
 ---
 
-## Wallet (Client Side)
+## Wallet (Server Side)
 
 ### Features:
-1. **Basic Authentication** (password and optionally token)  
-   - Where should credentials be stored?
-        - Password: DB
-        - Token: basically user-side
-2. **Create Wallet User Story**
+1. **Create Wallet**
    - User get to page for new user -> register -> wallet is created -> user get to the wallet main page
-   - Each pocket has **X value** of currency's coins (e.g., airdrop or distribution)
-   
+   *- Each pocket has **X value** of currency's coins (e.g., airdrop or distribution)
    - Optionally, users can create additional pockets for each of currencies.
         - How to implement it? Probably pocket is a virtual entity as representation of blockchain is unchanged
 3. **Delete Wallet**
@@ -25,7 +22,6 @@ A wallet client application that works with two cryptocurrencies' coins (referre
 6. **Get Data**
    - Balance for currencies
    - Transaction history for each currency over a specific period.
-7. ?Wallet smart contract?
 
 ---
 
@@ -79,89 +75,34 @@ A wallet client application that works with two cryptocurrencies' coins (referre
     - **Coins are burned**
 
 ## Architecture
-The approach is closer to service-oriented architecture
+The approach is closer to service-oriented architecture at the system level.
+And clean architecture at the code level. FIXME(make sure it is done or changed)
 
-Wallet as client-side application implemented as web-server serves static content
-Wallet client uses wallet server only to connect to blockchain
+Wallet server is a middleware to handle and proceed with requests from wallet client.
+Wallet server interacts with blockchain over:
+    - blockchain cli(kind of blockchain api, simplification here)
+    - wallet_node(get some state of the chain, e.g. blocks)
 
-Wallet server is a middleware to handle and proceed with requests from wallet client
-Wallet server interacts with blockchain over blockchain cli and wallet_node
-- A good idea is to interact with blockchain through wallet node only to not to overload blockchain
+### Addresses
 
-Wallet server: nodeID 3003
-Wallet client: nodeID 3004
-
-### Wallet consists of:
-- Frontend to show new user and main wallet page
-- Middleware to auth
-- Backend to use blockchain functionality
-
-### Storage
-To implements basic auth: use postgresql as database of users
-#### Schema
-Users table:
-username password
-
-Wallet table:
-username wallet
+Wallet server: localhost:3003
+Wallet client: localhost:3004
 
 ### Handlers:
-Some handlers use storages:
-    - DB for database of users
-    - BLC for blockchain
-
 - A good idea is to cache user data for GET requests to not to overload blockchain
     and append/change data after send/receive actions in cache as any tx is immutable.
     - Here I omit it
 
-/
-/auth(DB)
 /send(bc)
 /transactions(all txs history for the wallet for period(7d default))(bc)
 /currency_transactions(bc)(txs history for the currency for period(7d default))(bc)
 /delete_wallet(DB and blc)
 
-### Wallet UI
-- / has:
-    - at first stage(without auth):
-        - ask for wallet address that created before
-        - main page for provided address
-- The main page has:
-    - address
-    - two pockets, one for each currency 
-    - buttons for functionality:
-        - send
-        - get
-        - delete wallet
-
 ## Projecting
-1. All connections are handled in apart goroutine(both)
-2. Graceful shutdown(both)
-*3. Rate limiting(client)
-*4. Advanced routing(Gorilla mux)
+1. All connections are handled in apart goroutine
+2. Graceful shutdown
 
-Approach 1: create all web part then integrate it with blockchain
-Approach 2: create from inside to outside: start with backend
-
-### Handlers
-
-#### /
-Given user goto index
-When user submit valid wallet address
-Then needed wallet address info is shown to user
-
-User -> GET /
-App -> asks for wallet address
-User -> POST(submit wallet address)
-App -> check wallet address for validity and existence
-    if exists: get data from blockchain, fill static page with data, redirects to main page. url=/walletaddress
-    else -> 4** error
-Mock buttons for now
-
-Use getBalance from blc cli
-TODO: make blc cli as functions and cli package is imported(use cobra etc)
-To send request to blc, use wallet server that handles requests
-
+### Server side HTTP Handlers & TCP transport
 #### /get_history(all txs history for the wallet for period(7d default))(bc)
 Given user click get_history
 When user submit time period
@@ -170,13 +111,18 @@ Then user is redirected to page with wallet transactions history
 User -> GET / and button Get Transactions History
 *App -> asks for period
 *User -> POST(submit period)
-App -> search block by block from the last where (*timestamp if period submitted*):
-    (SEND)tx input: wallet address and output: other address
-    (RECEIVE)tx input: other address and output: wallet address
+App -> search block by block from the last where in order (*timestamp if period submitted*):
+    (SEND) tx input: pkhwallet | output: pkhother (pkhwallet does not count)
+    (RECEIVE)tx input: pkhother | output: pkhwallet
     
+    1744365364 Friday, April 11, 2025 4:56:04 PM
+    1744364329 Friday, April 11, 2025 4:38:49 PM
+    1744364314 Friday, April 11, 2025 4:38:34 PM
+    1744363590 Friday, April 11, 2025 4:26:30 PM
+
     for coinbase tx check only output
     represents for user as:
-    Timestamp Send/Receive Currency Amount Sender Receiver
+    BlockTimestamp Send/Receive Currency Amount WSender WReceiver
 
 App -> render template and redirects user to /transactions
 
@@ -186,18 +132,6 @@ When user submit time period and currency
 Then user is redirected to page with transactions history for currency
 
 Currency should be chosen by user: radiobutton(hardcoded)
-
-#### /auth(DB) change index page to "main page" is required
-NEW USER
-Given user get to /
-When user clicks sign up
-Then user is redirected to page with registration form, submit data and redirected to main page
-On main page user submits wallet address and it refers to user and can not be reused anyone else
-
-EXISTING USER
-Given user get to /
-When user click sign in
-Then user submit the login data and redirected to main page
 
 #### /send(blc)
 Given user click send
@@ -213,7 +147,7 @@ Then user is deleted from user's database and tokens from wallet are burned and 
 ### Format the code
 
 ## Q&A
-- Should wallet be in blockchain repo(monorepo approach)? yes
+- Should wallet serverside be in blockchain repo? - yes
     - Pros: 
         - simple to test, all code in one place
     - Cons: 
