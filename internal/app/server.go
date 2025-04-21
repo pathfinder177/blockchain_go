@@ -209,7 +209,7 @@ func handleBlock(request []byte, bc *Blockchain) {
 
 		blocksInTransit = blocksInTransit[1:]
 	} else {
-		UTXOSet := UTXOSet{bc}
+		UTXOSet := UTXOSet{bc, "FIXME"}
 		UTXOSet.Reindex()
 	}
 }
@@ -333,11 +333,11 @@ func handleTx(request []byte, bc *Blockchain) {
 				return
 			}
 
-			cbTx := NewCoinbaseTX(miningAddress, "")
+			cbTx := NewCoinbaseTX(miningAddress, "FIXME", "")
 			txs = append(txs, cbTx)
 
 			newBlock := bc.MineBlock(txs)
-			UTXOSet := UTXOSet{bc}
+			UTXOSet := UTXOSet{bc, "FIXME"}
 			UTXOSet.Reindex()
 
 			fmt.Println("New block is mined!")

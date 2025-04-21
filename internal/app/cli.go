@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // CLI responsible for processing command line arguments
@@ -20,8 +21,11 @@ func (cli *CLI) createBlockchain(address, nodeID string) {
 	bc := CreateBlockchain(address, nodeID)
 	defer bc.db.Close()
 
-	UTXOSet := UTXOSet{bc}
-	UTXOSet.Reindex()
+	utxoBuckets := []string{utxoBucketBadger, utxoBucketCatfish}
+	for _, uB := range utxoBuckets {
+		UTXOSet := UTXOSet{bc, uB}
+		UTXOSet.Reindex()
+	}
 
 	fmt.Println("Done!")
 }
@@ -39,19 +43,24 @@ func (cli *CLI) getBalance(address, nodeID string) {
 		log.Panic("ERROR: Address is not valid")
 	}
 	bc := NewBlockchain(nodeID)
-	UTXOSet := UTXOSet{bc}
 	defer bc.db.Close()
 
-	balance := 0
 	pubKeyHash := common.Base58Decode([]byte(address))
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-4]
-	UTXOs := UTXOSet.FindUTXO(pubKeyHash)
 
-	for _, out := range UTXOs {
-		balance += out.Value
+	utxoBuckets := []string{utxoBucketBadger, utxoBucketCatfish}
+	for _, uB := range utxoBuckets {
+		UTXOSet := UTXOSet{bc, uB}
+		UTXOs := UTXOSet.FindUTXO(pubKeyHash)
+
+		balance := 0
+		for _, out := range UTXOs {
+			balance += out.Value
+		}
+
+		currency, _ := strings.CutSuffix(uB, "_chainstate")
+		fmt.Printf("Balance of '%s': '%s': %d\n", address, currency, balance)
 	}
-
-	fmt.Printf("Balance of '%s': %d\n", address, balance)
 }
 
 func (cli *CLI) printUsage() {
@@ -95,11 +104,17 @@ func (cli *CLI) printChain(nodeID string) {
 
 func (cli *CLI) reindexUTXO(nodeID string) {
 	bc := NewBlockchain(nodeID)
-	UTXOSet := UTXOSet{bc}
-	UTXOSet.Reindex()
 
-	count := UTXOSet.CountTransactions()
-	fmt.Printf("Done! There are %d transactions in the UTXO set.\n", count)
+	utxoBuckets := []string{utxoBucketBadger, utxoBucketCatfish}
+	for _, uB := range utxoBuckets {
+		UTXOSet := UTXOSet{bc, uB}
+		UTXOSet.Reindex()
+		count := UTXOSet.CountTransactions()
+		fmt.Printf("Done! There are %d transactions in the UTXO set.\n", count)
+	}
+	// UTXOSet := UTXOSet{bc}
+	// UTXOSet.Reindex()
+
 }
 
 func (cli *CLI) send(from, to string, amount int, nodeID string, mineNow bool) {
@@ -111,8 +126,9 @@ func (cli *CLI) send(from, to string, amount int, nodeID string, mineNow bool) {
 	}
 
 	bc := NewBlockchain(nodeID)
-	UTXOSet := UTXOSet{bc}
 	defer bc.db.Close()
+	//get one or more UTXOset(s) depends on input
+	UTXOSet := UTXOSet{bc, "FIXME"}
 
 	wallets, err := NewWallets(nodeID)
 	if err != nil {
@@ -120,15 +136,21 @@ func (cli *CLI) send(from, to string, amount int, nodeID string, mineNow bool) {
 	}
 	wallet := wallets.GetWallet(from)
 
+	//different transactions depends on currency
 	tx := NewUTXOTransaction(&wallet, to, amount, &UTXOSet)
 
 	if mineNow {
-		cbTx := NewCoinbaseTX(from, "")
+		//one or more coinbaseTX
+		cbTx := NewCoinbaseTX(from, "FIXME", "")
+		//one or more UTXO TXs
 		txs := []*Transaction{cbTx, tx}
 
 		newBlock := bc.MineBlock(txs)
+		//one or more UTXOSet(s) updated
+		//Update can not take just block, it should take corresponding TX
 		UTXOSet.Update(newBlock)
 	} else {
+		//send TXs
 		sendTx(knownNodes[0], tx)
 	}
 

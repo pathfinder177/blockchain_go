@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	bolt "go.etcd.io/bbolt"
@@ -33,8 +34,14 @@ func CreateBlockchain(address string, nodeID string) *Blockchain {
 
 	var tip []byte
 
-	cbtx := NewCoinbaseTX(address, genesisCoinbaseData)
-	genesis := NewGenesisBlock(cbtx)
+	utxoBuckets := []string{utxoBucketBadger, utxoBucketCatfish}
+	cbTXs := []*Transaction{}
+	for _, uB := range utxoBuckets {
+		currency, _ := strings.CutSuffix(uB, "_chainstate")
+		cbTXs = append(cbTXs, NewCoinbaseTX(address, currency, genesisCoinbaseData))
+	}
+
+	genesis := NewGenesisBlock(cbTXs)
 
 	db, err := bolt.Open(dbFile, 0600, nil)
 	if err != nil {
@@ -215,7 +222,7 @@ func (bc *Blockchain) FindTransaction(ID []byte) (Transaction, error) {
 }
 
 // FindUTXO finds and returns all unspent transaction outputs
-func (bc *Blockchain) FindUTXO() map[string]TXOutputs {
+func (bc *Blockchain) FindUTXO(currency string) map[string]TXOutputs {
 	UTXO := make(map[string]TXOutputs)
 	spentTXOs := make(map[string][]int)
 	bci := bc.Iterator()
@@ -225,27 +232,28 @@ func (bc *Blockchain) FindUTXO() map[string]TXOutputs {
 
 		for _, tx := range block.Transactions {
 			txID := hex.EncodeToString(tx.ID)
+			if tx.Currency == currency {
 
-		Outputs:
-			for outIdx, out := range tx.Vout {
-				// Was the output spent?
-				if spentTXOs[txID] != nil {
-					for _, spentOutIdx := range spentTXOs[txID] {
-						if spentOutIdx == outIdx {
-							continue Outputs
+			Outputs:
+				for outIdx, out := range tx.Vout {
+					// Was the output of currency spent?
+					if spentTXOs[txID] != nil {
+						for _, spentOutIdx := range spentTXOs[txID] {
+							if spentOutIdx == outIdx {
+								continue Outputs
+							}
 						}
 					}
+					outs := UTXO[txID]
+					outs.Outputs = append(outs.Outputs, out)
+					UTXO[txID] = outs
 				}
 
-				outs := UTXO[txID]
-				outs.Outputs = append(outs.Outputs, out)
-				UTXO[txID] = outs
-			}
-
-			if !tx.IsCoinbase() {
-				for _, in := range tx.Vin {
-					inTxID := hex.EncodeToString(in.Txid)
-					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
+				if !tx.IsCoinbase() {
+					for _, in := range tx.Vin {
+						inTxID := hex.EncodeToString(in.Txid)
+						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
+					}
 				}
 			}
 		}

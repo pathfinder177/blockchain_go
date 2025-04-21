@@ -65,7 +65,7 @@ func (ws *Wallets) LoadFromFile(nodeID string) error {
 	}
 
 	var wallets Wallets
-	// gob.Register(elliptic.P256())
+	// gob.Register(elliptic.P256()) FIXME
 	decoder := gob.NewDecoder(bytes.NewReader(fileContent))
 	err = decoder.Decode(&wallets)
 	if err != nil {
