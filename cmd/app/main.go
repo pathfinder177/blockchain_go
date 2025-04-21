@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os/exec"
+	"strings"
 	"text/template"
 )
 
@@ -50,7 +52,7 @@ var index_tmpl_post = template.Must(template.New("form").Parse(`
 </html>
 `))
 
-func index(w http.ResponseWriter, r *http.Request) {
+func index(w http.ResponseWriter, r *http.Request) { //DELETEME and templates
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
 			http.Error(w, "Failed to parse form", http.StatusBadRequest)
@@ -71,6 +73,37 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	index_tmpl_get.Execute(w, nil)
+}
+
+func gWBHandler(w http.ResponseWriter, r *http.Request) {
+	type WalletBalanceResponse struct {
+		Address string `json:"address"`
+		Balance string `json:"balance"`
+	}
+
+	address := r.URL.Query().Get("address")
+	if address == "" {
+		http.Error(w, "Missing 'address' parameter", http.StatusBadRequest)
+		return
+	}
+
+	wb, err := getWalletBalance(address)
+	if err != nil {
+		http.Error(w, "Wallet address is not correct", http.StatusBadRequest)
+		return
+	}
+	b := strings.Join(wb, "") // or use a separator like " " if needed
+
+	response := WalletBalanceResponse{
+		Address: address,
+		Balance: b,
+	}
+
+	// Set response headers
+	w.Header().Set("Content-Type", "application/json")
+
+	// Encode response to JSON and write it
+	json.NewEncoder(w).Encode(response)
 }
 
 func getWalletBalance(address string) ([]string, error) {
@@ -102,15 +135,12 @@ func transactionsHistory(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	// os.Setenv("NODE_ID", "3003") //FIXME use it only on server side
-	startWalletServer()
+	// startWalletServer()
 	// getTransactionsHistory("14tmM4cbsoMqJvMv2dixauXFxKRaKnibad")
 
-	//wallet client side
-	// http.HandleFunc("/", index)
-	// http.HandleFunc("/transactions", transactionsHistory)
+	http.HandleFunc("/get_wallet_balance", gWBHandler)
 
-	// http.ListenAndServe(":3003", nil)
-
+	http.ListenAndServe(":3003", nil)
 }
 
 // package main

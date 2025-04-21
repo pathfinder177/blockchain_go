@@ -96,7 +96,7 @@ Wallet client: localhost:3004
 /send(bc)
 /transactions(all txs history for the wallet for period(7d default))(bc)
 /currency_transactions(bc)(txs history for the currency for period(7d default))(bc)
-/delete_wallet(DB and blc)
+*/delete_wallet(DB and blc)
 
 ## Projecting
 1. All connections are handled in apart goroutine
@@ -138,7 +138,7 @@ Given user click send
 When user submit amount, currency, receiver
 Then currency is sent and confirmation is shown(e.g. you sent 10 badgercoin to address)
 
-#### /delete_wallet(DB and blc)
+#### */delete_wallet(DB and blc)
 Given user click delete wallet
 When user confirm
 Then user is deleted from user's database and tokens from wallet are burned and wallet is deleted from wallet file
