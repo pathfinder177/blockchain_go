@@ -251,6 +251,7 @@ func sendBlockTxsHistory(chFilledBlockTxsHistory <-chan []BlockTxsHistory, chDon
 		//sort by timestamp
 		return BTH
 	}
+	return BTH //FIXME
 }
 
 func handleConnection(conn net.Conn, chFilledBlockTxsHistory chan []BlockTxsHistory, chDone chan bool) {
