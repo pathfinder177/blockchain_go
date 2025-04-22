@@ -34,6 +34,7 @@ func CreateBlockchain(address string, nodeID string) *Blockchain {
 
 	var tip []byte
 
+	utxoBuckets := []string{utxoBucketBadger, utxoBucketCatfish}
 	cbTXs := []*Transaction{}
 	for _, uB := range utxoBuckets {
 		currency, _ := strings.CutSuffix(uB, "_chainstate")

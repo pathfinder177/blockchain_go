@@ -202,12 +202,14 @@ func NewUTXOTransaction(wallet *Wallet, to, currency string, amount int, UTXOSet
 	var outputs []TXOutput
 
 	pubKeyHash := HashPubKey(wallet.PublicKey)
+	//validOutputs depends on currency(ies) in input
 	acc, validOutputs := UTXOSet.FindSpendableOutputs(pubKeyHash, amount)
 
 	if acc < amount {
 		log.Panic("ERROR: Not enough funds")
 	}
 
+	// Build a list of inputs depends on currency
 	for txid, outs := range validOutputs {
 		txID, err := hex.DecodeString(txid)
 		if err != nil {
@@ -220,6 +222,7 @@ func NewUTXOTransaction(wallet *Wallet, to, currency string, amount int, UTXOSet
 		}
 	}
 
+	// Build a list of outputs depends on currency
 	from := string(wallet.GetAddress())
 	outputs = append(outputs, *NewTXOutput(amount, to))
 	if acc > amount {
@@ -228,6 +231,7 @@ func NewUTXOTransaction(wallet *Wallet, to, currency string, amount int, UTXOSet
 
 	tx := Transaction{nil, inputs, outputs, currency}
 	tx.ID = tx.Hash()
+	//Sign for each UTXOset
 	UTXOSet.Blockchain.SignTransaction(&tx, wallet.PrivateKey)
 
 	return &tx
