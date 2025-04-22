@@ -110,19 +110,20 @@ func (cli *CLI) reindexUTXO(nodeID string) {
 		UTXOSet := UTXOSet{bc, uB}
 		UTXOSet.Reindex()
 		count := UTXOSet.CountTransactions()
-		fmt.Printf("Done! There are %d transactions in the UTXO set.\n", count)
-	}
-	// UTXOSet := UTXOSet{bc}
-	// UTXOSet.Reindex()
 
+		fmt.Printf("Done! There are %d transactions in the %s UTXO set.\n", count, uB)
+	}
 }
 
-func (cli *CLI) send(from, to string, amount int, nodeID string, mineNow bool) {
+func (cli *CLI) send(from, to, currency string, amount int, nodeID string, mineNow bool) {
 	if !ValidateAddress(from) {
 		log.Panic("ERROR: Sender address is not valid")
 	}
 	if !ValidateAddress(to) {
 		log.Panic("ERROR: Recipient address is not valid")
+	}
+	if !ValidateCurrencyName(currency) {
+		log.Panic("ERROR: Currency is not valid")
 	}
 
 	bc := NewBlockchain(nodeID)
@@ -130,19 +131,19 @@ func (cli *CLI) send(from, to string, amount int, nodeID string, mineNow bool) {
 	//get one or more UTXOset(s) depends on input
 	UTXOSet := UTXOSet{bc, "FIXME"}
 
+	bucketName := currency + "_chainstate"
+	UTXOSet := UTXOSet{bc, bucketName}
+
 	wallets, err := NewWallets(nodeID)
 	if err != nil {
 		log.Panic(err)
 	}
 	wallet := wallets.GetWallet(from)
 
-	//different transactions depends on currency
-	tx := NewUTXOTransaction(&wallet, to, amount, &UTXOSet)
+	tx := NewUTXOTransaction(&wallet, to, currency, amount, &UTXOSet)
 
 	if mineNow {
-		//one or more coinbaseTX
-		cbTx := NewCoinbaseTX(from, "FIXME", "")
-		//one or more UTXO TXs
+		cbTx := NewCoinbaseTX(from, currency, "")
 		txs := []*Transaction{cbTx, tx}
 
 		newBlock := bc.MineBlock(txs)
@@ -191,6 +192,7 @@ func (cli *CLI) Run() {
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
 	sendFrom := sendCmd.String("from", "", "Source wallet address")
 	sendTo := sendCmd.String("to", "", "Destination wallet address")
+	sendCurrency := sendCmd.String("currency", "", "Currency to send")
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
 	sendMine := sendCmd.Bool("mine", false, "Mine immediately on the same node")
 	startNodeMiner := startNodeCmd.String("miner", "", "Enable mining mode and send reward to ADDRESS")
@@ -265,12 +267,12 @@ func (cli *CLI) Run() {
 	}
 
 	if sendCmd.Parsed() {
-		if *sendFrom == "" || *sendTo == "" || *sendAmount <= 0 {
+		if *sendFrom == "" || *sendTo == "" || *sendCurrency == "" || *sendAmount <= 0 {
 			sendCmd.Usage()
 			os.Exit(1)
 		}
 
-		cli.send(*sendFrom, *sendTo, *sendAmount, nodeID, *sendMine)
+		cli.send(*sendFrom, *sendTo, *sendCurrency, *sendAmount, nodeID, *sendMine)
 	}
 
 	if startNodeCmd.Parsed() {

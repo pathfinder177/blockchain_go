@@ -197,7 +197,7 @@ func NewCoinbaseTX(to, currency, data string) *Transaction {
 }
 
 // NewUTXOTransaction creates a new transaction
-func NewUTXOTransaction(wallet *Wallet, to string, amount int, UTXOSet *UTXOSet) *Transaction {
+func NewUTXOTransaction(wallet *Wallet, to, currency string, amount int, UTXOSet *UTXOSet) *Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
 
@@ -229,8 +229,7 @@ func NewUTXOTransaction(wallet *Wallet, to string, amount int, UTXOSet *UTXOSet)
 		outputs = append(outputs, *NewTXOutput(acc-amount, from)) // a change
 	}
 
-	//TX depends on currencies
-	tx := Transaction{nil, inputs, outputs, "FIXME"}
+	tx := Transaction{nil, inputs, outputs, currency}
 	tx.ID = tx.Hash()
 	//Sign for each UTXOset
 	UTXOSet.Blockchain.SignTransaction(&tx, wallet.PrivateKey)
