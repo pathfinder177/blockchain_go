@@ -9,4 +9,7 @@ type (
 	CliRepo interface {
 		GetBalance(context.Context, entity.Wallet) (string, error)
 	}
+	WalletNodeRepo interface {
+		GetHistory(context.Context, entity.Wallet) (string, error)
+	}
 )

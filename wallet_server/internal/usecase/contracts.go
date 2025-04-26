@@ -9,4 +9,7 @@ type (
 	GetBalanceInteractor interface {
 		GetBalance(context.Context, entity.Wallet) (string, error)
 	}
+	GetTransactionsHistoryInteractor interface {
+		GetHistory(context.Context, entity.Wallet) (string, error)
+	}
 )

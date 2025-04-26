@@ -1,4 +1,4 @@
-package server
+package http_server
 
 import (
 	"context"
@@ -46,7 +46,7 @@ func gWBHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func StartServer(appPort string) {
+func Start(appPort string) {
 	http.HandleFunc("/get_wallet_balance", gWBHandler)
 
 	log.Printf("Server is listening on http://localhost%s\n", appPort)
