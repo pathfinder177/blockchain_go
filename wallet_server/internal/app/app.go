@@ -9,5 +9,7 @@ const (
 )
 
 func Run() {
+	//create objects
+
 	server.StartServer(appPort)
 }

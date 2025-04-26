@@ -1,11 +1,14 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
-	"os/exec"
+	"time"
+	"wallet_server/internal/entity"
+	"wallet_server/internal/repo/cli"
+	GetBalanceInteractor "wallet_server/internal/usecase/getBalanceInteractor"
 )
 
 func gWBHandler(w http.ResponseWriter, r *http.Request) {
@@ -15,21 +18,25 @@ func gWBHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	address := r.URL.Query().Get("address")
-
 	if address == "" {
 		http.Error(w, "Missing 'address' parameter", http.StatusBadRequest)
 		return
 	}
-	//interactor -> cliGateway
-	wb, err := getWalletBalance(address)
-	if wb == "" {
-		http.Error(w, "Wallet balance is empty", http.StatusInternalServerError)
-		return
-	} else if err != nil {
+	e := entity.Wallet{Address: address}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
+	defer cancel()
+
+	//FIXME to app(do not forget to inject it here!)
+	repo := cli.New()
+	ucgbi := GetBalanceInteractor.New(repo)
+
+	wb, err := ucgbi.GetBalance(ctx, e)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	//interactor returns
+
 	response := WalletBalanceResponse{
 		Address: address,
 		Balance: wb,
@@ -37,20 +44,6 @@ func gWBHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
-}
-
-func getWalletBalance(address string) (string, error) {
-	args := []string{"getbalance", "-address", address}
-	cmd := exec.Command("./blockchain", args...)
-	cmd.Env = append(os.Environ(), "NODE_ID=3001")
-	cmd.Dir = "/home/pathfinder177/projects/blockchain/cmd/app"
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-
-	return string(output), nil
 }
 
 func StartServer(appPort string) {
