@@ -1,4 +1,4 @@
-package tcp_server
+package tcp
 
 const (
 	commandLength int = 12

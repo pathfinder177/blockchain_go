@@ -1,4 +1,4 @@
-package tcp_server
+package tcp
 
 import (
 	"fmt"
@@ -28,7 +28,7 @@ func handleConnection(conn net.Conn) {
 	// }
 }
 
-func Start(tcpServerAddr, tcpPort string) {
+func Listen(tcpServerAddr, tcpPort string) {
 	log.Printf("TCPServer is listening on localhost%s\n", tcpPort)
 	ln, err := net.Listen("tcp", tcpServerAddr+tcpPort)
 	if err != nil {
