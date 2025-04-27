@@ -3,28 +3,29 @@ package app
 import (
 	"time"
 	"wallet_server/internal/controller/http_server"
-	"wallet_server/internal/controller/tcp_server"
+	"wallet_server/internal/gateway/tcp"
 )
 
 const (
-	appServerAddr string = "http://localhost"
+	appServerAddr string = "localhost"
 	appPort       string = ":3003"
 
-	tcpServerAddr string = "http://localhost"
+	tcpServerAddr string = "localhost"
 	tcpPort       string = ":4000"
 
-	walletNodeAddress string = "http://localhost"
+	walletNodeScheme  string = "http://"
+	walletNodeAddress string = "localhost"
 	walletNodePort    string = ":3001"
 )
 
 func Run() {
 	//gateway
+	go tcp.Listen(tcpServerAddr, tcpPort)
 
 	//usecases
 
 	//controller
 	go http_server.Start(appServerAddr, appPort)
-	go tcp_server.Start(tcpServerAddr, tcpPort)
 
 	for {
 		time.Sleep(time.Second * 300)
