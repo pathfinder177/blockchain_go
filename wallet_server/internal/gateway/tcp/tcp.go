@@ -1,4 +1,4 @@
-package walletnode
+package tcp
 
 import (
 	"context"
