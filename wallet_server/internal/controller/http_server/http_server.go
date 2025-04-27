@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 	"wallet_server/internal/entity"
-	"wallet_server/internal/repo/cli"
+	"wallet_server/internal/gateway/cli"
 	GetBalanceInteractor "wallet_server/internal/usecase/getBalanceInteractor"
 )
 
@@ -27,9 +27,10 @@ func gWBHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
 	defer cancel()
 
-	//FIXME to app(do not forget to inject it here!)
-	repo := cli.New()
-	ucgbi := GetBalanceInteractor.New(repo)
+	//FIXME to app(inject in func)
+	gateway := cli.New()
+	ucgbi := GetBalanceInteractor.New(gateway)
+	//
 
 	wb, err := ucgbi.GetBalance(ctx, e)
 	if err != nil {
@@ -46,11 +47,11 @@ func gWBHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func Start(appPort string) {
+func Start(appServerAddr, appPort string) {
 	http.HandleFunc("/get_wallet_balance", gWBHandler)
 
-	log.Printf("Server is listening on http://localhost%s\n", appPort)
-	if err := http.ListenAndServe(appPort, nil); err != nil {
+	log.Printf("HTTPServer is listening on http://localhost%s\n", appPort)
+	if err := http.ListenAndServe(appServerAddr+appPort, nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 }

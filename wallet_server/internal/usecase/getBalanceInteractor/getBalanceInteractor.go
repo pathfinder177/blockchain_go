@@ -3,19 +3,19 @@ package GetBalanceInteractor
 import (
 	"context"
 	"wallet_server/internal/entity"
-	"wallet_server/internal/repo"
+	"wallet_server/internal/gateway"
 )
 
 type UseCase struct {
-	repo repo.CliRepo
+	gateway gateway.CliGateway
 }
 
-func New(r repo.CliRepo) *UseCase {
+func New(g gateway.CliGateway) *UseCase {
 	return &UseCase{
-		repo: r,
+		gateway: g,
 	}
 }
 
 func (uc *UseCase) GetBalance(ctx context.Context, e entity.Wallet) (string, error) {
-	return uc.repo.GetBalance(ctx, e)
+	return uc.gateway.GetBalance(ctx, e)
 }

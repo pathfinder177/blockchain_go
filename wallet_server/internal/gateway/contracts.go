@@ -1,4 +1,4 @@
-package repo
+package gateway
 
 import (
 	"context"
@@ -6,10 +6,10 @@ import (
 )
 
 type (
-	CliRepo interface {
+	CliGateway interface {
 		GetBalance(context.Context, entity.Wallet) (string, error)
 	}
-	WalletNodeRepo interface {
+	TCPGateway interface {
 		GetHistory(context.Context, entity.Wallet) (string, error)
 	}
 )

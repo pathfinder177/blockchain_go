@@ -88,52 +88,61 @@ Wallet server interacts with blockchain over:
 Wallet server: localhost:3003
 Wallet client: localhost:3004
 
+### Server Clean Architecture
+
 ### Handlers:
 - A good idea is to cache user data for GET requests to not to overload blockchain
     and append/change data after send/receive actions in cache as any tx is immutable.
     - Here I omit it
 
-/send(bc)
-/transactions(all txs history for the wallet for period(7d default))(bc)
-/currency_transactions(bc)(txs history for the currency for period(7d default))(bc)
+/get_transactions_history(all txs history for the wallet for period(7d default))(bc)
+//get_currency_transactions_history(bc)(txs history for the currency for period(7d default))(bc)
+/send_currency(bc)
 */delete_wallet(DB and blc)
 
 ## Projecting
 1. All connections are handled in apart goroutine
 2. Graceful shutdown
+3. Rate limiting
+
+Use contextWithTimeout to send answer req
+Use middleware and contextWithValue to handle client req
 
 ### Server side HTTP Handlers & TCP transport
-#### /get_history(all txs history for the wallet for period(7d default))(bc)
+#### /get_transactions_history(all txs history for the wallet for period(7d default))(bc)
 Given user click get_history
-When user submit time period
+*When user submit time period
 Then user is redirected to page with wallet transactions history
 
-User -> GET / and button Get Transactions History
-*App -> asks for period
+User -> GET / and button Get Transactions History: hit client handler
+*App -> ask for period
 *User -> POST(submit period)
-App -> search block by block from the last where in order (*timestamp if period submitted*):
+Client -> hit handler on server
+Server -> get data from wallet node
+Server -> search block by block from the last where in order (*timestamp if period submitted*):
     (SEND) tx input: pkhwallet | output: pkhother (pkhwallet does not count)
     (RECEIVE)tx input: pkhother | output: pkhwallet
+    for coinbase tx check only output
     
     1744365364 Friday, April 11, 2025 4:56:04 PM
     1744364329 Friday, April 11, 2025 4:38:49 PM
     1744364314 Friday, April 11, 2025 4:38:34 PM
     1744363590 Friday, April 11, 2025 4:26:30 PM
 
-    for coinbase tx check only output
     represents for user as:
-    BlockTimestamp Send/Receive Currency Amount WSender WReceiver
+    BlockTimestamp(dd/mm/yyyy hh/mm) Type(Send/Receive) Currency Amount WSender WReceiver
 
-App -> render template and redirects user to /transactions
+client -> render template and redirects user to /get_transactions_history
 
-#### /get_history_for_currency(bc)(txs history for the currency for period(7d default))(bc)
+
+#### /get_transactions_history(bc)(txs history for the currency for period(7d default))(bc)
 Given user click get_history for currency
 When user submit time period and currency
 Then user is redirected to page with transactions history for currency
 
 Currency should be chosen by user: radiobutton(hardcoded)
 
-#### /send(blc)
+#### /send_currency(blc)
 Given user click send
 When user submit amount, currency, receiver
 Then currency is sent and confirmation is shown(e.g. you sent 10 badgercoin to address)
