@@ -3,19 +3,19 @@ package GetTransactionsHistoryInteractor
 import (
 	"context"
 	"wallet_server/internal/entity"
-	"wallet_server/internal/repo"
+	"wallet_server/internal/gateway"
 )
 
 type UseCase struct {
-	repo repo.WalletNodeRepo
+	gateway gateway.TCPGateway
 }
 
-func New(r repo.WalletNodeRepo) *UseCase {
+func New(g gateway.TCPGateway) *UseCase {
 	return &UseCase{
-		repo: r,
+		gateway: g,
 	}
 }
 
 func (uc *UseCase) GetBalance(ctx context.Context, e entity.Wallet) (string, error) {
-	return uc.repo.GetHistory(ctx, e)
+	return uc.gateway.GetHistory(ctx, e)
 }
