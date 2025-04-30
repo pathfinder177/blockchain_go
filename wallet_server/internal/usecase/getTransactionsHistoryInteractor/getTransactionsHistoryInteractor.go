@@ -16,6 +16,6 @@ func New(g gateway.TCPGateway) *UseCase {
 	}
 }
 
-func (uc *UseCase) GetBalance(ctx context.Context, e entity.Wallet) (string, error) {
+func (uc *UseCase) GetHistory(ctx context.Context, e entity.Wallet) (string, error) {
 	return uc.gateway.GetHistory(ctx, e)
 }

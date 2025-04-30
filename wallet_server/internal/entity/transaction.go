@@ -1,10 +1,10 @@
 package entity
 
-type Transaction struct {
+type HistoricalTransaction struct {
 	From      string
 	To        string
-	Asset     string
+	Currency  string
 	Amount    int
 	Timestamp int64
-	Status    string
+	// Status    string
 }

@@ -8,12 +8,6 @@ import (
 	"wallet_server/internal/entity"
 )
 
-type cliGateway struct{}
-
-func New() *cliGateway {
-	return &cliGateway{}
-}
-
 func (*cliGateway) GetBalance(ctx context.Context, w entity.Wallet) (string, error) {
 	address := w.Address
 
