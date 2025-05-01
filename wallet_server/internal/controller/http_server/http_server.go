@@ -15,7 +15,6 @@ import (
 
 func gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	type TXHistoryResponse struct {
-		Address string `json:"address"`
 		History string `json:"history"`
 	}
 
@@ -44,7 +43,6 @@ func gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response := TXHistoryResponse{
-		Address: address,
 		History: history,
 	}
 
