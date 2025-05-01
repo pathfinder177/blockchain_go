@@ -24,7 +24,7 @@ func gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	e := entity.Wallet{Address: address}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
 	//fixme to app(inject into func)
