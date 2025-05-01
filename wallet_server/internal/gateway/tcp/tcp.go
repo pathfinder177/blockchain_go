@@ -155,8 +155,7 @@ func (tcpGateway *tcpGateway) getWalletTxFromBlock(tx *Transaction, timestamp in
 		for _, vout := range tx.Vout {
 			sVoutPK := string(vout.PubKeyHash)
 			if sVoutPK != WPubKeyHash {
-				htx.To = string(vout.PubKeyHash)
-				// htx.To = getWalletByPubKeyHash(vout.PubKeyHash)
+				htx.To = getWalletAddrByPubKeyHash(sVoutPK)
 				htx.Amount = vout.Value
 
 				return htx
@@ -171,7 +170,7 @@ func (tcpGateway *tcpGateway) getWalletTxFromBlock(tx *Transaction, timestamp in
 		sVoutPK := string(vout.PubKeyHash)
 		if sVoutPK == WPubKeyHash {
 			htx.From = sVinPK //FIXME
-			//htx.From = getWalletByPubKeyHash(sVinPK)
+			htx.From = getWalletAddrByPubKeyHash(sVinPK)
 			htx.To = WAddress
 			htx.Currency = tx.Currency
 			htx.Timestamp = timestamp
@@ -219,13 +218,14 @@ func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) (string,
 
 	input := make(chan *Block)
 	output := make(chan *entity.HistoricalTransaction)
+	defer close(output)
 
 	//input reader output writer
 	go func() {
 		for b := range input {
 			for _, tx := range b.Transactions {
 				wtfb := tcpGateway.getWalletTxFromBlock(tx, b.Timestamp, WAddress, WPubKeyHash)
-				if wtfb != nil { //FIXME it writes nil to channel
+				if wtfb != nil {
 					output <- wtfb
 				}
 			}

@@ -37,6 +37,23 @@ func gobEncode(data any) []byte {
 	return buff.Bytes()
 }
 
+// FIXME move to CLI
+func getWalletAddrByPubKeyHash(WPubKeyHash string) string {
+	args := []string{"getwalletaddrbypubkeyhash", "-pubkeyhash", WPubKeyHash}
+	cmd := exec.Command("./blockchain", args...)
+	cmd.Env = append(os.Environ(), "NODE_ID=3001")
+	//FIXME
+	cmd.Dir = "/home/pathfinder177/projects/blockchain/cmd/app"
+
+	WAddress, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatalf("can not get wallet addr by pub key hash %v", err)
+	}
+
+	return string(WAddress)
+}
+
+// FIXME move to CLI
 func getWalletPubKeyHash(WAddress string) (string, error) {
 	args := []string{"getwalletpubkeyhash", "-address", WAddress}
 	cmd := exec.Command("./blockchain", args...)
