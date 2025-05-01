@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
+	"wallet_server/internal/entity"
 )
 
 const (
@@ -89,4 +91,14 @@ func bytesToCommand(bytes []byte) string {
 	}
 
 	return string(command)
+}
+
+func mapHistoryToString(history []*entity.HistoricalTransaction) string {
+	historyToString := make([]string, len(history))
+	for _, historicalTX := range history {
+		s := fmt.Sprintf("%v", *historicalTX)
+		historyToString = append(historyToString, s)
+	}
+
+	return strings.Join(historyToString, "\n")
 }

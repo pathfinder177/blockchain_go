@@ -164,12 +164,9 @@ func (tcpGateway *tcpGateway) getWalletTxFromBlock(tx *Transaction, timestamp in
 
 	}
 	//Received TX
-	//check coinbase
-	//coinbase has no input
 	for _, vout := range tx.Vout {
 		sVoutPK := string(vout.PubKeyHash)
 		if sVoutPK == WPubKeyHash {
-			htx.From = sVinPK //FIXME
 			htx.From = getWalletAddrByPubKeyHash(sVinPK)
 			htx.To = WAddress
 			htx.Currency = tx.Currency
@@ -208,7 +205,7 @@ func (tcpGateway *tcpGateway) handleConnection(conn net.Conn, input chan<- *Bloc
 	}
 }
 
-func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) (string, error) {
+func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) ([]*entity.HistoricalTransaction, error) {
 	ln, err := net.Listen("tcp", tcpGateway.thisAddr)
 	if err != nil {
 		log.Panic(err)
@@ -259,7 +256,7 @@ func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) (string,
 		tcpGateway.handleConnection(conn, input) //FIXME go
 	}
 
-	return "", nil //FIXME
+	return history, nil
 }
 
 func (tcpGateway *tcpGateway) GetHistory(ctx context.Context, e entity.Wallet) (string, error) {
@@ -276,6 +273,6 @@ func (tcpGateway *tcpGateway) GetHistory(ctx context.Context, e entity.Wallet) (
 	if err != nil {
 		return "", nil
 	}
-	return history, nil
 
+	return mapHistoryToString(history), nil
 }
