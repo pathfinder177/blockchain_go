@@ -239,7 +239,7 @@ func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) ([]*enti
 
 	tcpGateway.getBlocks() //FIXME go
 	for {                  //FIXME go
-		deadline := time.Now().Add(10 * time.Second)
+		deadline := time.Now().Add(3 * time.Second)
 		if err := tcpLn.SetDeadline(deadline); err != nil {
 			log.Fatalf("failed to set deadline: %v", err)
 		}
@@ -247,7 +247,7 @@ func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) ([]*enti
 		conn, err := tcpLn.Accept()
 		if err != nil {
 			if ne, ok := err.(net.Error); ok && ne.Timeout() {
-				fmt.Println("no connection in 10s — stopping listener")
+				fmt.Println("no connection in 3s — stopping listener")
 				break
 			}
 			log.Panicf("accept error: %v", err)
