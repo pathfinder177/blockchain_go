@@ -96,9 +96,9 @@ func bytesToCommand(bytes []byte) string {
 func mapHistoryToString(history []*entity.HistoricalTransaction) string {
 	historyToString := make([]string, len(history))
 	for _, historicalTX := range history {
-		s := fmt.Sprintf("%v", *historicalTX)
+		s := fmt.Sprintf("%v\n", *historicalTX)
 		historyToString = append(historyToString, s)
 	}
 
-	return strings.Join(historyToString, "\n")
+	return strings.Join(historyToString, "")
 }
