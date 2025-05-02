@@ -143,7 +143,7 @@ func (tcpGateway *tcpGateway) handleBlock(request []byte, input chan<- *Block) {
 func (tcpGateway *tcpGateway) getWalletTxFromBlock(tx *Transaction, timestamp int64, WAddress, WPubKeyHash string) *entity.HistoricalTransaction {
 	htx := &entity.HistoricalTransaction{}
 
-	//Sent TX
+	//Sent TX FIXME
 	vin := tx.Vin[0]
 
 	sVinPK := string(vin.PubKey)

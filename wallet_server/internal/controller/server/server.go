@@ -8,14 +8,9 @@ import (
 	"strings"
 	"time"
 	"wallet_server/internal/entity"
-	"wallet_server/internal/gateway/cli"
-	"wallet_server/internal/gateway/tcp"
-	GetBalanceInteractor "wallet_server/internal/usecase/getBalanceInteractor"
-	GetTransactionsHistoryInteractor "wallet_server/internal/usecase/getTransactionsHistoryInteractor"
-	SendCurrencyInteractor "wallet_server/internal/usecase/sendCurrencyInteractor"
 )
 
-func sendCurrencyHandler(w http.ResponseWriter, r *http.Request) {
+func (router *Router) sendCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -42,13 +37,14 @@ func sendCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	defer cancel()
 
-	//FIXME to app(inject in func)
-	gateway := cli.New()
-	ucsci := SendCurrencyInteractor.New(gateway)
-	//
-
 	wallet := entity.Wallet{Address: req.Sender}
-	result, err := ucsci.SendCurrency(ctx, wallet, req.Amount, req.Currency, req.Receiver, req.Mine)
+	result, err := router.UCSendCurrency.SendCurrency(
+		ctx, wallet,
+		req.Amount,
+		req.Currency,
+		req.Receiver,
+		req.Mine,
+	)
 	if err != nil {
 		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
 		return
@@ -67,7 +63,7 @@ func sendCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {
+func (router *Router) gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	type TXHistoryResponse struct {
 		History string `json:"history"`
 	}
@@ -77,19 +73,11 @@ func gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing 'address' parameter", http.StatusBadRequest)
 		return
 	}
-	e := entity.Wallet{Address: address}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 
-	//fixme to app(inject into func)
-	tcpServerAddr := "localhost:4000"
-	blockchainNodeAddr := "localhost:3000"
-
-	gateway := tcp.New(tcpServerAddr, blockchainNodeAddr)
-	ucGTHI := GetTransactionsHistoryInteractor.New(gateway)
-	//
-
-	history, err := ucGTHI.GetHistory(ctx, e)
+	e := entity.Wallet{Address: address}
+	history, err := router.UCGetTransactionsHistory.GetHistory(ctx, e)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -102,7 +90,7 @@ func gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func gWBHandler(w http.ResponseWriter, r *http.Request) {
+func (router *Router) gWBHandler(w http.ResponseWriter, r *http.Request) {
 	type WalletBalanceResponse struct {
 		Address string `json:"address"`
 		Balance string `json:"balance"`
@@ -113,17 +101,12 @@ func gWBHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing 'address' parameter", http.StatusBadRequest)
 		return
 	}
-	e := entity.Wallet{Address: address}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
 	defer cancel()
 
-	//FIXME to app(inject in func)
-	gateway := cli.New()
-	ucgbi := GetBalanceInteractor.New(gateway)
-	//
-
-	wb, err := ucgbi.GetBalance(ctx, e)
+	e := entity.Wallet{Address: address}
+	wb, err := router.UCGetBalance.GetBalance(ctx, e)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -138,10 +121,10 @@ func gWBHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func Start(appServerAddr string) {
-	http.HandleFunc("/get_wallet_balance", gWBHandler)
-	http.HandleFunc("/get_transactions_history", gTXHistoryHandler)
-	http.HandleFunc("/send_currency", sendCurrencyHandler)
+func Start(appServerAddr string, router *Router) {
+	http.HandleFunc("/get_wallet_balance", router.gWBHandler)
+	http.HandleFunc("/get_transactions_history", router.gTXHistoryHandler)
+	http.HandleFunc("/send_currency", router.sendCurrencyHandler)
 
 	log.Printf("HTTPServer is listening on http://%s\n", appServerAddr)
 	if err := http.ListenAndServe(appServerAddr, nil); err != nil {
