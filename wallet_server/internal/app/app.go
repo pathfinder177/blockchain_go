@@ -9,11 +9,11 @@ const (
 	appServerAddr string = "localhost"
 	appPort       string = ":3003"
 
+	blockchainNodeAddress string = "localhost"
+	blockchainNodePort    string = ":3000"
+
 	tcpServerAddr string = "localhost"
 	tcpServerPort string = ":4000"
-
-	walletNodeAddress string = "localhost"
-	walletNodePort    string = ":3001"
 )
 
 func Run() {

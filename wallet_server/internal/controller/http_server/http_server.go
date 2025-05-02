@@ -24,16 +24,14 @@ func gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	e := entity.Wallet{Address: address}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
 	defer cancel()
 
 	//fixme to app(inject into func)
-	tcpServerAddr := "localhost"
-	tcpServerPort := ":4000"
-	walletNodeAddress := "localhost"
-	walletNodePort := ":3001"
+	tcpServerAddr := "localhost:4000"
+	blockchainNodeAddr := "localhost:3000"
 
-	gateway := tcp.New(tcpServerAddr+tcpServerPort, walletNodeAddress+walletNodePort)
+	gateway := tcp.New(tcpServerAddr, blockchainNodeAddr)
 	ucGTHI := GetTransactionsHistoryInteractor.New(gateway)
 	//
 
