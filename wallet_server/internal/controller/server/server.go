@@ -30,7 +30,7 @@ func sendCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 		currency := r.FormValue("currency")
 		sender := r.FormValue("address")
 		receiver := r.FormValue("receiver")
-		mineNow := r.FormValue("mineNow")
+		mine := r.FormValue("mine")
 
 		e := entity.Wallet{Address: sender}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
@@ -41,7 +41,7 @@ func sendCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 		ucsci := SendCurrencyInteractor.New(gateway)
 		//
 
-		result, err := ucsci.SendCurrency(ctx, e, amount, currency, receiver, mineNow)
+		result, err := ucsci.SendCurrency(ctx, e, amount, currency, receiver, mine)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -127,13 +127,13 @@ func gWBHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func Start(appServerAddr, appPort string) {
+func Start(appServerAddr string) {
 	http.HandleFunc("/get_wallet_balance", gWBHandler)
 	http.HandleFunc("/get_transactions_history", gTXHistoryHandler)
 	http.HandleFunc("/send_currency", sendCurrencyHandler)
 
-	log.Printf("HTTPServer is listening on http://localhost%s\n", appPort)
-	if err := http.ListenAndServe(appServerAddr+appPort, nil); err != nil {
+	log.Printf("HTTPServer is listening on http://%s\n", appServerAddr)
+	if err := http.ListenAndServe(appServerAddr, nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 }

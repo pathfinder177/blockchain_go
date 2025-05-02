@@ -16,6 +16,6 @@ func New(g gateway.CliGateway) *UseCase {
 	}
 }
 
-func (uc *UseCase) SendCurrency(ctx context.Context, e entity.Wallet, amount, currency, receiver, mineNow string) (string, error) {
-	return uc.gateway.SendCurrency(ctx, e, amount, currency, receiver, mineNow)
+func (uc *UseCase) SendCurrency(ctx context.Context, e entity.Wallet, amount, currency, receiver, mine string) (string, error) {
+	return uc.gateway.SendCurrency(ctx, e, amount, currency, receiver, mine)
 }

@@ -37,6 +37,20 @@ func _getBalance(address string) (string, error) {
 	return string(output), nil
 }
 
-func (*cliGateway) SendCurrency(context.Context, entity.Wallet, string, string, string, string) (string, error) {
-	return "not implemented", nil
+func (*cliGateway) SendCurrency(ctx context.Context, e entity.Wallet, amount, currency, receiver, mine string) (string, error) {
+	//FIXME validate args
+	sender := e.Address
+
+	args := []string{"send", "-from", sender, "-to", receiver, "-currency", currency, "-amount", amount, "-mine", mine}
+	cmd := exec.Command("./blockchain", args...)
+	cmd.Env = append(os.Environ(), "NODE_ID=3001")
+	//FIXME
+	cmd.Dir = "/home/pathfinder177/projects/blockchain/cmd/app"
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	return string(output), nil
 }
