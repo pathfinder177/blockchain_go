@@ -6,21 +6,18 @@ import (
 )
 
 const (
-	appServerAddr string = "localhost"
-	appPort       string = ":3003"
+	appServerAddr string = "localhost:3003"
 
-	blockchainNodeAddress string = "localhost"
-	blockchainNodePort    string = ":3000"
+	blockchainNodeAddress string = "localhost:3000"
 
-	tcpServerAddr string = "localhost"
-	tcpServerPort string = ":4000"
+	tcpServerAddr string = "localhost:4000"
 )
 
 func Run() {
 	//usecases
 
 	//controller
-	go server.Start(appServerAddr, appPort)
+	go server.Start(appServerAddr)
 
 	for {
 		time.Sleep(time.Second * 300)
