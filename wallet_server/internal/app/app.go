@@ -20,7 +20,7 @@ func Run() {
 	go server.Start(appServerAddr)
 
 	for {
-		time.Sleep(time.Second * 300)
+		time.Sleep(time.Second * 1800)
 	} //FIXME
 
 	//graceful shutdown here
