@@ -274,5 +274,6 @@ func (tcpGateway *tcpGateway) GetHistory(ctx context.Context, e entity.Wallet) (
 		return "", nil
 	}
 
+	sortHistoricalTX(history)
 	return mapHistoryToString(history), nil
 }

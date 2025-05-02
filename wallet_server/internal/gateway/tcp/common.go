@@ -2,11 +2,13 @@ package tcp
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/gob"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 	"wallet_server/internal/entity"
 )
@@ -91,6 +93,13 @@ func bytesToCommand(bytes []byte) string {
 	}
 
 	return string(command)
+}
+
+func sortHistoricalTX(history []*entity.HistoricalTransaction) {
+	slices.SortFunc(history,
+		func(a, b *entity.HistoricalTransaction) int {
+			return cmp.Compare(a.Timestamp, b.Timestamp)
+		})
 }
 
 func mapHistoryToString(history []*entity.HistoricalTransaction) string {
