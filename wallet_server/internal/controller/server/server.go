@@ -11,20 +11,49 @@ import (
 	"wallet_server/internal/gateway/tcp"
 	GetBalanceInteractor "wallet_server/internal/usecase/getBalanceInteractor"
 	GetTransactionsHistoryInteractor "wallet_server/internal/usecase/getTransactionsHistoryInteractor"
+	SendCurrencyInteractor "wallet_server/internal/usecase/sendCurrencyInteractor"
 )
 
 func sendCurrencyHandler(w http.ResponseWriter, r *http.Request) {
-	type sendCurrencyResponse struct {
-		SendResult string `json:"sendResult"`
-	}
+	if r.Method == http.MethodPost {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "Invalid form", http.StatusBadRequest)
+			return
+		}
 
-	result := "Success"
-	response := sendCurrencyResponse{
-		SendResult: result,
-	}
+		type sendCurrencyResponse struct {
+			SendResult string `json:"sendResult"`
+		}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+		//FIXME validate parameters
+		amount := r.FormValue("amount")
+		currency := r.FormValue("currency")
+		sender := r.FormValue("address")
+		receiver := r.FormValue("receiver")
+		mineNow := r.FormValue("mineNow")
+
+		e := entity.Wallet{Address: sender}
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
+		defer cancel()
+
+		//FIXME to app(inject in func)
+		gateway := cli.New()
+		ucsci := SendCurrencyInteractor.New(gateway)
+		//
+
+		result, err := ucsci.SendCurrency(ctx, e, amount, currency, receiver, mineNow)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		response := sendCurrencyResponse{
+			SendResult: result,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}
 }
 
 func gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {

@@ -36,3 +36,7 @@ func _getBalance(address string) (string, error) {
 
 	return string(output), nil
 }
+
+func (*cliGateway) SendCurrency(context.Context, entity.Wallet, string, string, string, string) (string, error) {
+	return "not implemented", nil
+}
