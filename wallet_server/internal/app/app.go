@@ -2,7 +2,7 @@ package app
 
 import (
 	"time"
-	"wallet_server/internal/controller/http_server"
+	"wallet_server/internal/controller/server"
 )
 
 const (
@@ -20,7 +20,7 @@ func Run() {
 	//usecases
 
 	//controller
-	go http_server.Start(appServerAddr, appPort)
+	go server.Start(appServerAddr, appPort)
 
 	for {
 		time.Sleep(time.Second * 300)
