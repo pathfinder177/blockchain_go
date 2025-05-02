@@ -13,6 +13,20 @@ import (
 	GetTransactionsHistoryInteractor "wallet_server/internal/usecase/getTransactionsHistoryInteractor"
 )
 
+func sendCurrencyHandler(w http.ResponseWriter, r *http.Request) {
+	type sendCurrencyResponse struct {
+		SendResult string `json:"sendResult"`
+	}
+
+	result := "Success"
+	response := sendCurrencyResponse{
+		SendResult: result,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 func gTXHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	type TXHistoryResponse struct {
 		History string `json:"history"`
@@ -87,6 +101,7 @@ func gWBHandler(w http.ResponseWriter, r *http.Request) {
 func Start(appServerAddr, appPort string) {
 	http.HandleFunc("/get_wallet_balance", gWBHandler)
 	http.HandleFunc("/get_transactions_history", gTXHistoryHandler)
+	http.HandleFunc("/send_currency", sendCurrencyHandler)
 
 	log.Printf("HTTPServer is listening on http://localhost%s\n", appPort)
 	if err := http.ListenAndServe(appServerAddr+appPort, nil); err != nil {
