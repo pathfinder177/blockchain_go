@@ -142,11 +142,6 @@ func (cli *CLI) send(from, to, currency string, amount int, nodeID string, mineN
 	bc := NewBlockchain(nodeID)
 	defer bc.db.Close()
 	//get one or more UTXOset(s) depends on input
-	UTXOSet := UTXOSet{bc, "FIXME"}
-
-	bucketName := currency + "_chainstate"
-	UTXOSet := UTXOSet{bc, bucketName}
-
 	bucketName := currency + "_chainstate"
 	UTXOSet := UTXOSet{bc, bucketName}
 
