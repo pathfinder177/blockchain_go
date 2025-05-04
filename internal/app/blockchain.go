@@ -14,9 +14,12 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-const dbFile = "blockchain_%s.db"
-const blocksBucket = "blocks"
-const genesisCoinbaseData = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
+const (
+	blocksBucket        = "blocks"
+	dbFile              = "blockchain_%s.db"
+	dbTimeout           = time.Second * 2
+	genesisCoinbaseData = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
+)
 
 // Blockchain implements interactions with a DB
 type Blockchain struct {
@@ -42,7 +45,7 @@ func CreateBlockchain(address string, nodeID string) *Blockchain {
 
 	genesis := NewGenesisBlock(cbTXs)
 
-	db, err := bolt.Open(dbFile, 0600, nil)
+	db, err := bolt.Open(dbFile, 0600, &bolt.Options{Timeout: dbTimeout})
 	if err != nil {
 		log.Panic(err)
 	}
@@ -84,7 +87,7 @@ func NewBlockchain(nodeID string) *Blockchain {
 	}
 
 	var tip []byte
-	db, err := bolt.Open(dbFile, 0600, &bolt.Options{Timeout: time.Second * 2})
+	db, err := bolt.Open(dbFile, 0600, &bolt.Options{Timeout: dbTimeout})
 	if err != nil {
 		log.Panic(err)
 	}
