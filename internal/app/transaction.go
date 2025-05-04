@@ -209,7 +209,6 @@ func NewUTXOTransaction(wallet *Wallet, to, currency string, amount int, UTXOSet
 		log.Panic("ERROR: Not enough funds")
 	}
 
-	// Build a list of inputs depends on currency
 	for txid, outs := range validOutputs {
 		txID, err := hex.DecodeString(txid)
 		if err != nil {
@@ -222,7 +221,6 @@ func NewUTXOTransaction(wallet *Wallet, to, currency string, amount int, UTXOSet
 		}
 	}
 
-	// Build a list of outputs depends on currency
 	from := string(wallet.GetAddress())
 	outputs = append(outputs, *NewTXOutput(amount, to))
 	if acc > amount {
