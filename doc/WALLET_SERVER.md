@@ -85,6 +85,7 @@ Wallet server interacts with blockchain over:
 
 ### Addresses
 
+Blockchain node: localhost:3000
 Wallet server: localhost:3003
 Wallet client: localhost:3004
 
@@ -105,7 +106,6 @@ Wallet client: localhost:3004
 2. Graceful shutdown
 3. Rate limiting
 
-Use contextWithTimeout to send answer req
 Use middleware and contextWithValue to handle client req
 
 ### Server side HTTP Handlers & TCP transport
@@ -134,13 +134,24 @@ Server -> search block by block from the last where in order (*timestamp if peri
 
 client -> render template and redirects user to /get_transactions_history
 
+@make blockchain gateway package consists of cli and tcp
+@way to binary should be calculated not hardcoded
 
-#### /get_transactions_history(bc)(txs history for the currency for period(7d default))(bc)
-Given user click get_history for currency
-When user submit time period and currency
-Then user is redirected to page with transactions history for currency
+1. handle tcp connection
+    interaction:
+        S -> getBlocks -> N
+        S <- inv <- N
+        S -> sendGetData -> N
+        S(handleBlock) <- block(s) <- N
+2. Return result(transactions)
+    in _gH created channel of Blocks
+    _gH runs goroutine that reads blocks from input till it is closed
+        the go read, handle, write to other ch
+        output ch red in _gH and fill the list of TXs
 
-Currency should be chosen by user: radiobutton(hardcoded)
+
+##### TCP interaction
+
 
 #### /send_currency(blc)
 Given user click send
