@@ -128,7 +128,7 @@ func (tcpGateway *tcpGateway) handleBlock(request []byte, input chan<- *Block) {
 	blockData := payload.Block
 	input <- DeserializeBlock(blockData)
 
-	fmt.Println("Recevied a new block!") //FIXME
+	fmt.Println("Received a new block!")
 
 	if len(blocksInTransit) > 0 {
 		blockHash := blocksInTransit[0]
@@ -140,44 +140,49 @@ func (tcpGateway *tcpGateway) handleBlock(request []byte, input chan<- *Block) {
 	}
 }
 
-func (tcpGateway *tcpGateway) getWalletTxFromBlock(tx *Transaction, timestamp int64, WAddress, WPubKeyHash string) *entity.HistoricalTransaction {
+func (tcpGateway *tcpGateway) getWalletTxFromBlock(tx *Transaction, timestamp int64, WAddress, WPubKeyHash string) (*entity.HistoricalTransaction, error) {
 	htx := &entity.HistoricalTransaction{}
 
-	//Sent TX FIXME
-	vin := tx.Vin[0]
+	//Sent TX
+	for _, vin := range tx.Vin {
+		strVinPKH := string(vin.PubKey)
+		sender_addr := getWalletAddrByPubKeyHash(strVinPKH)
 
-	sVinPK := string(vin.PubKey)
-	if sVinPK == WPubKeyHash {
-		htx.From = WAddress
-		htx.Currency = tx.Currency
-		htx.Timestamp = timestamp
+		if sender_addr == WAddress {
+			htx.From = WAddress
+			htx.Currency = tx.Currency
+			htx.Timestamp = timestamp
 
-		for _, vout := range tx.Vout {
-			sVoutPK := string(vout.PubKeyHash)
-			if sVoutPK != WPubKeyHash {
-				htx.To = getWalletAddrByPubKeyHash(sVoutPK)
-				htx.Amount = vout.Value
+			for _, vout := range tx.Vout {
+				strVoutPKH := string(vout.PubKeyHash)
+				if strVoutPKH != WPubKeyHash { //Not correct
+					htx.To = getWalletAddrByPubKeyHash(strVoutPKH)
+					htx.Amount = vout.Value
 
-				return htx
+					return htx, nil
+				}
 			}
 		}
-
 	}
 	//Received TX
+
+	//if flag mine=true then sender pubkey is in first Vin
+	vinPKH := tx.Vin[0].PubKey
+
 	for _, vout := range tx.Vout {
-		sVoutPK := string(vout.PubKeyHash)
-		if sVoutPK == WPubKeyHash {
-			htx.From = getWalletAddrByPubKeyHash(sVinPK)
+		strVoutPKH := string(vout.PubKeyHash)
+		if strVoutPKH == WPubKeyHash {
+			htx.From = getWalletAddrByPubKeyHash(string(vinPKH))
 			htx.To = WAddress
 			htx.Currency = tx.Currency
 			htx.Timestamp = timestamp
 			htx.Amount = vout.Value
 
-			return htx
+			return htx, nil
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (tcpGateway *tcpGateway) getBlocks() {
@@ -218,15 +223,20 @@ func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) ([]*enti
 	defer close(output)
 
 	//input reader output writer
-	go func() {
+	go func() error {
 		for b := range input {
 			for _, tx := range b.Transactions {
-				wtfb := tcpGateway.getWalletTxFromBlock(tx, b.Timestamp, WAddress, WPubKeyHash)
+				wtfb, err := tcpGateway.getWalletTxFromBlock(tx, b.Timestamp, WAddress, WPubKeyHash)
+				if err != nil {
+					return err
+				}
+
 				if wtfb != nil {
 					output <- wtfb
 				}
 			}
 		}
+		return nil
 	}()
 
 	//output reader
@@ -237,8 +247,8 @@ func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) ([]*enti
 		}
 	}()
 
-	tcpGateway.getBlocks() //FIXME go
-	for {                  //FIXME go
+	go tcpGateway.getBlocks()
+	for {
 		deadline := time.Now().Add(2 * time.Second)
 		if err := tcpLn.SetDeadline(deadline); err != nil {
 			log.Fatalf("failed to set deadline: %v", err)
@@ -253,7 +263,7 @@ func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) ([]*enti
 			log.Panicf("accept error: %v", err)
 		}
 
-		tcpGateway.handleConnection(conn, input) //FIXME go
+		go tcpGateway.handleConnection(conn, input)
 	}
 
 	return history, nil
