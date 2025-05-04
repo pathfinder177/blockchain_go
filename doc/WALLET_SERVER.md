@@ -102,11 +102,6 @@ Wallet client: localhost:3004
 */delete_wallet(DB and blc)
 
 ## Projecting
-1. All connections are handled in apart goroutine
-2. Graceful shutdown
-3. Rate limiting
-
-Use middleware and contextWithValue to handle client req
 
 ### Server side HTTP Handlers & TCP transport
 #### /get_transactions_history(all txs history for the wallet for period(7d default))(bc)
@@ -134,9 +129,6 @@ Server -> search block by block from the last where in order (*timestamp if peri
 
 client -> render template and redirects user to /get_transactions_history
 
-@make blockchain gateway package consists of cli and tcp
-@way to binary should be calculated not hardcoded
-
 1. handle tcp connection
     interaction:
         S -> getBlocks -> N
@@ -163,8 +155,35 @@ Given user click delete wallet
 When user confirm
 Then user is deleted from user's database and tokens from wallet are burned and wallet is deleted from wallet file
 
-### Clean up the code
-### Format the code
+### Fixes  
+1. Correct address in sent transactions
+
+### Improvements
+Concurrency improvements
+
+App level:
+1. Graceful shutdown
+2. Rate limiting
+
+Clean architecture:
+1. DTO
+2. Request/response objects
+
+Controller package
+1. Use middleware(chaining) and contextWithValue to handle client req
+2. Advanced routing(Gorilla mux)
+
+
+Cli package
+1. make blockchain gateway package consists of cli and tcp
+2. way to binary should be calculated not hardcoded
+
+Observability
+1. logs
+2. metrics
+
+Clean up the code
+1. DRY
 
 ## Q&A
 - Should wallet serverside be in blockchain repo? - yes
