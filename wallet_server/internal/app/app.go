@@ -1,6 +1,11 @@
 package app
 
 import (
+	"context"
+	"log"
+	"os/signal"
+	"syscall"
+	"time"
 	"wallet_server/internal/controller/server"
 	"wallet_server/internal/gateway/cli"
 	"wallet_server/internal/gateway/tcp"
@@ -13,10 +18,15 @@ const (
 	blockchainNodeAddr string = "localhost:3000"
 	listenAddr         string = "localhost:3003"
 	tcpServerAddr      string = "localhost:4000"
+
+	shutdownTimeout time.Duration = 5 * time.Second
 )
 
+// FIXME add config
 func Run() {
-	//FIXME add config
+	//Signal handler firstly
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	//gateway
 	cliGateway := cli.New()
@@ -36,7 +46,21 @@ func Run() {
 	)
 	server := server.NewServer(listenAddr)
 
-	server.Start(router) //FIXME go
+	go func() {
+		server.Start(router)
+	}()
 
 	//graceful shutdown
+	<-ctx.Done()
+	log.Println("shutting down server gracefully")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	select {
+	case <-shutdownCtx.Done():
+		log.Fatal("shutdownTimeout")
+	default:
+		break
+	}
 }
