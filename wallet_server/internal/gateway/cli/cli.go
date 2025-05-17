@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"wallet_server/internal/entity"
+	gw "wallet_server/internal/gateway"
 )
 
 func (*cliGateway) GetBalance(ctx context.Context, w entity.Wallet) (string, error) {
@@ -24,10 +25,9 @@ func (*cliGateway) GetBalance(ctx context.Context, w entity.Wallet) (string, err
 
 func _getBalance(address string) (string, error) {
 	args := []string{"getbalance", "-address", address}
-	cmd := exec.Command("./blockchain", args...)
-	cmd.Env = append(os.Environ(), "NODE_ID=3001")
-	//FIXME
-	cmd.Dir = "/home/pathfinder177/projects/blockchain/cmd/app"
+	cmd := exec.Command(gw.BlockchainBin, args...)
+	cmd.Env = append(os.Environ(), gw.BlockchainWalletNodeID)
+	cmd.Dir = gw.BlockchainBinPath
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -42,10 +42,9 @@ func (*cliGateway) SendCurrency(ctx context.Context, e entity.Wallet, amount, cu
 	sender := e.Address
 
 	args := []string{"send", "-from", sender, "-to", receiver, "-currency", currency, "-amount", amount, "-mine", mine}
-	cmd := exec.Command("./blockchain", args...)
-	cmd.Env = append(os.Environ(), "NODE_ID=3001")
-	//FIXME
-	cmd.Dir = "/home/pathfinder177/projects/blockchain/cmd/app"
+	cmd := exec.Command(gw.BlockchainBin, args...)
+	cmd.Env = append(os.Environ(), gw.BlockchainWalletNodeID)
+	cmd.Dir = gw.BlockchainBinPath
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {

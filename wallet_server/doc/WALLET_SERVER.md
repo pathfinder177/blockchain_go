@@ -173,11 +173,6 @@ Controller package
 1. Use middleware(chaining) and contextWithValue to handle client req
 2. Advanced routing(Gorilla mux)
 
-
-Cli package
-1. make blockchain gateway package consists of cli and tcp
-2. way to binary should be calculated not hardcoded
-
 Observability
 1. logs
 2. metrics
