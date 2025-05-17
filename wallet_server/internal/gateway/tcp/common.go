@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"wallet_server/internal/entity"
+	gw "wallet_server/internal/gateway"
 )
 
 const (
@@ -41,13 +42,11 @@ func gobEncode(data any) []byte {
 	return buff.Bytes()
 }
 
-// FIXME move to CLI
 func getWalletAddrByPubKeyHash(WPubKeyHash string) string {
 	args := []string{"getwalletaddrbypubkeyhash", "-pubkeyhash", WPubKeyHash}
-	cmd := exec.Command("./blockchain", args...)
-	cmd.Env = append(os.Environ(), "NODE_ID=3001")
-	//FIXME
-	cmd.Dir = "/home/pathfinder177/projects/blockchain/cmd/app"
+	cmd := exec.Command(gw.BlockchainBin, args...)
+	cmd.Env = append(os.Environ(), gw.BlockchainWalletNodeID)
+	cmd.Dir = gw.BlockchainBinPath
 
 	WAddress, err := cmd.CombinedOutput()
 	if err != nil {
@@ -57,13 +56,11 @@ func getWalletAddrByPubKeyHash(WPubKeyHash string) string {
 	return string(WAddress)
 }
 
-// FIXME move to CLI
 func getWalletPubKeyHash(WAddress string) (string, error) {
 	args := []string{"getwalletpubkeyhash", "-address", WAddress}
-	cmd := exec.Command("./blockchain", args...)
-	cmd.Env = append(os.Environ(), "NODE_ID=3001")
-	//FIXME
-	cmd.Dir = "/home/pathfinder177/projects/blockchain/cmd/app"
+	cmd := exec.Command(gw.BlockchainBin, args...)
+	cmd.Env = append(os.Environ(), gw.BlockchainWalletNodeID)
+	cmd.Dir = gw.BlockchainBinPath
 
 	pubKeyHash, err := cmd.CombinedOutput()
 	if err != nil {
