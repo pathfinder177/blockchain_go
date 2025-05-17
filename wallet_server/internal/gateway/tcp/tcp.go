@@ -258,11 +258,11 @@ func (tcpGateway *tcpGateway) _getHistory(WAddress, WPubKeyHash string) ([]*enti
 		if err != nil {
 			if ne, ok := err.(net.Error); ok && ne.Timeout() {
 				fmt.Println("no connection in 2s — stopping listener")
-				conn.Close()
 				break
 			}
 			log.Panicf("accept error: %v", err)
 		}
+		defer conn.Close()
 
 		go tcpGateway.handleConnection(conn, input)
 	}
