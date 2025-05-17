@@ -10,12 +10,14 @@ import (
 )
 
 const (
-	appServerAddr      string = "localhost:3003"
 	blockchainNodeAddr string = "localhost:3000"
+	listenAddr         string = "localhost:3003"
 	tcpServerAddr      string = "localhost:4000"
 )
 
 func Run() {
+	//FIXME add config
+
 	//gateway
 	cliGateway := cli.New()
 	tcpGateway := tcp.New(tcpServerAddr, blockchainNodeAddr)
@@ -27,12 +29,14 @@ func Run() {
 	UCSendCurrency := SendCurrencyInteractor.New(cliGateway)
 
 	//controller
-	router := server.New(
+	router := server.NewRouter(
 		UCGetBalance,
 		UCGetTransactionsHistory,
 		UCSendCurrency,
 	)
-	server.Start(appServerAddr, router) //FIXME go
+	server := server.NewServer(listenAddr)
 
-	//graceful shutdown here
+	server.Start(router) //FIXME go
+
+	//graceful shutdown
 }
