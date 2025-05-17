@@ -12,7 +12,7 @@ type Router struct {
 	UCSendCurrency           *SendCurrencyInteractor.UseCase
 }
 
-func New(
+func NewRouter(
 	getBalance *GetBalanceInteractor.UseCase,
 	getTXHIstory *GetTransactionsHistoryInteractor.UseCase,
 	sendCurrency *SendCurrencyInteractor.UseCase,

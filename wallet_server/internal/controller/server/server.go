@@ -10,6 +10,20 @@ import (
 	"wallet_server/internal/entity"
 )
 
+type Server struct {
+	mux    *http.ServeMux
+	server *http.Server
+}
+
+func NewServer(listenAddr string) *Server {
+	m := http.NewServeMux()
+
+	return &Server{
+		mux:    m,
+		server: &http.Server{Addr: listenAddr, Handler: m},
+	}
+}
+
 func (router *Router) sendCurrencyHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -121,13 +135,15 @@ func (router *Router) gWBHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func Start(appServerAddr string, router *Router) {
-	http.HandleFunc("/get_wallet_balance", router.gWBHandler)
-	http.HandleFunc("/get_transactions_history", router.gTXHistoryHandler)
-	http.HandleFunc("/send_currency", router.sendCurrencyHandler)
+func (s *Server) Start(router *Router) {
+	s.mux.HandleFunc("/get_wallet_balance", router.gWBHandler)
+	s.mux.HandleFunc("/get_transactions_history", router.gTXHistoryHandler)
 
-	log.Printf("HTTPServer is listening on http://%s\n", appServerAddr)
-	if err := http.ListenAndServe(appServerAddr, nil); err != nil {
+	s.mux.HandleFunc("/send_currency", router.sendCurrencyHandler)
+
+	log.Printf("HTTPServer is listening on http://%s\n", s.server.Addr)
+
+	if err := s.server.ListenAndServe(); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 }
