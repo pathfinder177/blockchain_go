@@ -57,10 +57,7 @@ func Run() {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	select {
-	case <-shutdownCtx.Done():
-		log.Fatal("shutdownTimeout")
-	default:
-		break
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("%v", err)
 	}
 }

@@ -143,7 +143,15 @@ func (s *Server) Start(router *Router) {
 
 	log.Printf("HTTPServer is listening on http://%s\n", s.server.Addr)
 
-	if err := s.server.ListenAndServe(); err != nil {
+	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal("ListenAndServe:", err)
 	}
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	if err := s.server.Shutdown(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
